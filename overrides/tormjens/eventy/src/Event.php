@@ -13,7 +13,6 @@ abstract class Event
 
     public function __construct()
     {
-
     }
 
     /**
@@ -27,12 +26,14 @@ abstract class Event
     public function listen($hook, $callback, $priority = 20, $arguments = 1)
     {
         $this->listeners[$hook][] = [
+            // FreeScout: closures are not wrapped into HashedCallable, as serializing
+            // each closure slows down every request when modules add many listeners.
             'callback'  => $callback,
             'priority'  => $priority,
             'arguments' => $arguments,
         ];
         usort($this->listeners[$hook], function ($a, $b) {
-            return (int)$a['priority'] - (int)$b['priority'];
+            return $a['priority'] - $b['priority'];
         });
 
         return $this;
@@ -79,7 +80,13 @@ abstract class Event
      */
     public function getListeners($hook)
     {
-        return $this->listeners[$hook] ?? [];
+        if (isset($this->listeners[$hook])) {
+            $listeners = $this->listeners[$hook];
+
+            return $listeners;
+        }
+
+        return [];
     }
 
     /**
@@ -95,7 +102,15 @@ abstract class Event
             $callback = explode('@', $callback);
 
             return [app('\\'.$callback[0]), $callback[1]];
+        } elseif (is_string($callback)) {
+            if (function_exists($callback)) {
+                return $callback;
+            }
+
+            return [resolve('\\'.$callback), 'handle'];
         } elseif (is_callable($callback)) {
+            return $callback;
+        } elseif (is_array($callback)) {
             return $callback;
         } else {
             throw new \Exception('$callback is not a Callable', 1);
