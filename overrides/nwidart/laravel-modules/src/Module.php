@@ -197,7 +197,7 @@ abstract class Module extends ServiceProvider
         if ($this->isLoadFilesOnBoot()) {
             try {
                 $this->registerFiles();
-            } catch (\Exception $e) {
+            } catch (\Throwable $e) {
                 $e = \Eventy::filter('modules.register_error', $e, $this);
                 if ($e) {
                     throw $e;
@@ -297,7 +297,7 @@ abstract class Module extends ServiceProvider
 
         try {
             $this->registerProviders();
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             $e = \Eventy::filter('modules.register_error', $e, $this);
             if ($e) {
                 throw $e;
@@ -318,7 +318,7 @@ abstract class Module extends ServiceProvider
      */
     protected function fireEvent($event)
     {
-        $this->app['events']->fire(sprintf('modules.%s.'.$event, $this->getLowerName()), [$this]);
+        $this->app['events']->dispatch(sprintf('modules.%s.'.$event, $this->getLowerName()), [$this]);
     }
 
     /**
@@ -347,7 +347,7 @@ abstract class Module extends ServiceProvider
             foreach ($this->get('files', []) as $file) {
                 include $this->path.'/'.$file;
             }
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             $e = \Eventy::filter('modules.register_error', $e, $this);
             if ($e) {
                 throw $e;

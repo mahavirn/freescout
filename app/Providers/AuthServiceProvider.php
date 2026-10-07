@@ -29,6 +29,24 @@ class AuthServiceProvider extends ServiceProvider
     {
         $this->registerPolicies();
 
-        //
+        // Same as AuthManager::createSessionDriver() but with FreeScout session guard.
+        \Auth::extend('session', function ($app, $name, $config) {
+            $guard = new \App\Misc\SessionGuard(
+                $name,
+                \Auth::createUserProvider($config['provider'] ?? null),
+                $app['session.store'],
+                rehashOnLogin: $app['config']->get('hashing.rehash_on_login', true),
+                timeboxDuration: $app['config']->get('auth.timebox_duration', 200000),
+                hashKey: $app['config']->get('app.key'),
+            );
+            $guard->setCookieJar($app['cookie']);
+            $guard->setDispatcher($app['events']);
+            $guard->setRequest($app->refresh('request', $guard, 'setRequest'));
+            if (isset($config['remember'])) {
+                $guard->setRememberDuration($config['remember']);
+            }
+
+            return $guard;
+        });
     }
 }

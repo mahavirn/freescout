@@ -76,18 +76,8 @@ class UserNotification extends Mailable
         // Settings via $this->addCustomHeaders does not work
         $new_headers = $this->headers;
         if (!empty($new_headers)) {
-            $this->withSwiftMessage(function ($swiftmessage) use ($new_headers) {
-                if (!empty($new_headers['Message-ID'])) {
-                    $swiftmessage->setId($new_headers['Message-ID']);
-                }
-                $headers = $swiftmessage->getHeaders();
-                foreach ($new_headers as $header => $value) {
-                    if ($header != 'Message-ID') {
-                        $headers->addTextHeader($header, $value);
-                    }
-                }
-
-                return $swiftmessage;
+            $this->withSymfonyMessage(function ($message) use ($new_headers) {
+                \MailHelper::setMessageHeaders($message, $new_headers);
             });
         }
 

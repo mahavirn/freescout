@@ -7,6 +7,8 @@ use Illuminate\Support\Facades\Storage;
 
 class Attachment extends Model
 {
+    use \App\Misc\SerializesDates;
+
     const TYPE_TEXT = 0;
     const TYPE_MULTIPART = 1;
     const TYPE_MESSAGE = 2;

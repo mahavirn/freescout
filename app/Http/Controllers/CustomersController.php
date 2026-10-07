@@ -50,10 +50,10 @@ class CustomersController extends Controller
      */
     public function updateSave($id, Request $request)
     {
-        function mb_ucfirst($string)
-        {
+        // Not a global function: mb_ucfirst() exists in PHP 8.4 and symfony/polyfill-mbstring.
+        $ucfirst = function ($string) {
             return mb_strtoupper(mb_substr($string, 0, 1)).mb_strtolower(mb_substr($string, 1));
-        }
+        };
 
         $customer = Customer::findOrFail($id);
         $flash_message = '';
@@ -132,7 +132,7 @@ class CustomersController extends Controller
                     } elseif ($customer->first_name) {
                         $email->customer->first_name = $customer->first_name;
                     } else {
-                        $email->customer->first_name = mb_ucfirst($email->getNameFromEmail());
+                        $email->customer->first_name = $ucfirst($email->getNameFromEmail());
                     }
                     $email->customer->save();
                 }

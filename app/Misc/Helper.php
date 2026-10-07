@@ -942,14 +942,43 @@ class Helper
         }
         $dest_path = storage_path().DIRECTORY_SEPARATOR.'app'.DIRECTORY_SEPARATOR.$storage_file_path;
 
-        // If file exists it has to be deleted, otherwise Zipper will add file to the existing archive
+        // If file exists it has to be deleted, otherwise file will be added to the existing archive
         if (self::getPrivateStorage()->exists($storage_file_path)) {
             self::getPrivateStorage()->delete($storage_file_path);
         }
 
-        \Chumper\Zipper\Facades\Zipper::make($dest_path)->folder($folder)->add($files)->close();
+        \File::ensureDirectoryExists(dirname($dest_path));
+
+        $zip = new \ZipArchive();
+        if ($zip->open($dest_path, \ZipArchive::CREATE | \ZipArchive::OVERWRITE) !== true) {
+            throw new \Exception('Could not create ZIP archive: '.$dest_path);
+        }
+        foreach ($files as $path) {
+            self::addToZipArchive($zip, $path, $folder);
+        }
+        $zip->close();
 
         return $dest_path;
+    }
+
+    /**
+     * Add file or directory contents (recursively) to the ZIP archive folder.
+     */
+    public static function addToZipArchive($zip, $path, $folder = '')
+    {
+        $prefix = $folder !== '' ? rtrim($folder, '/').'/' : '';
+
+        if (is_file($path)) {
+            $zip->addFile($path, $prefix.basename($path));
+
+            return;
+        }
+        foreach (\File::files($path) as $file) {
+            $zip->addFile($file->getPathname(), $prefix.$file->getFilename());
+        }
+        foreach (\File::directories($path) as $dir) {
+            self::addToZipArchive($zip, $dir, $prefix.basename($dir));
+        }
     }
 
     // Preserved for backward compatibility only.
@@ -1037,7 +1066,18 @@ class Helper
      */
     public static function unzip($archive, $to)
     {
-        \Chumper\Zipper\Facades\Zipper::make($archive)->extractTo($to);
+        \File::ensureDirectoryExists($to, 0755);
+
+        $zip = new \ZipArchive();
+        if ($zip->open($archive) !== true) {
+            throw new \Exception('Could not open ZIP archive: '.$archive);
+        }
+        $result = $zip->extractTo($to);
+        $zip->close();
+
+        if (!$result) {
+            throw new \Exception('Could not extract ZIP archive: '.$archive);
+        }
     }
 
     public static function logException($e, $prefix = '')
@@ -3367,7 +3407,7 @@ class Helper
     public static function isLocalStorage($disk = '')
     {
         if ($disk) {
-            return \Storage::disk($disk)->getDriver()->getAdapter() instanceof \League\Flysystem\Adapter\Local;
+            return \Storage::disk($disk)->getAdapter() instanceof \League\Flysystem\Local\LocalFilesystemAdapter;
         } else {
             return config('filesystems.default') == 'local';
         }

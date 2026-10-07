@@ -86,66 +86,25 @@ class ReplyToCustomer extends Mailable
         $new_headers = $this->headers;
         if (!empty($new_headers) || $from_alias) {
             $mailbox = $this->mailbox;
-            $this->withSwiftMessage(function ($swiftmessage) use ($new_headers, $from_alias, $mailbox, $thread) {
+            $this->withSymfonyMessage(function ($message) use ($new_headers, $from_alias, $mailbox, $thread) {
                 \MailHelper::$smtp_mime_message = '';
 
-                $headers = null;
-
                 if (!empty($new_headers)) {
-                    if (!empty($new_headers['Message-ID'])) {
-                        $swiftmessage->setId($new_headers['Message-ID']);
-                    }
-                    $headers = $swiftmessage->getHeaders();
-                    foreach ($new_headers as $header => $value) {
-                        if ($header != 'Message-ID') {
-                            $headers->addTextHeader($header, $value);
-                        }
-                    }
+                    \MailHelper::setMessageHeaders($message, $new_headers);
                 }
                 if (!empty($from_alias)) {
-                    $aliases = $mailbox->getAliases();
-
                     // Make sure that the From contains a mailbox alias,
                     // as user thread may have From specified when a user
                     // replies to an email notification.
-                    if (array_key_exists($from_alias, $aliases)) {
-
-                        $from_alias_name = $aliases[$from_alias] ?? '';
-
-                        // Take into account mailbox From Name setting.
-                        $mailbox_mail_from = $mailbox->getMailFrom($thread->created_by_user, $thread->conversation);
-                        if ($mailbox_mail_from['name'] == $mailbox->name && $from_alias_name) {
-                            // Use name from alias.
-                        } else {
-                            // User name or custom.
-                            $from_alias_name = $mailbox_mail_from['name'];
-                        }
-
-                        if (!$headers) {
-                            $headers = $swiftmessage->getHeaders();
-                        }
-
-                        $swift_from = $headers->get('From');
-
-                        if ($from_alias_name) {
-                            $swift_from->setNameAddresses([
-                                $from_alias => $from_alias_name,
-                            ]);
-                        } else {
-                            $swift_from->setAddresses([
-                                $from_alias,
-                            ]);
-                        }
-                    }
+                    \MailHelper::setFromAlias($message, $mailbox, $from_alias, $thread->created_by_user, $thread->conversation);
                 }
 
-                \Eventy::action('email.reply_to_customer.swiftmessage', $swiftmessage, $from_alias, $thread, $mailbox);
+                // $message is \Symfony\Component\Mime\Email (it was \Swift_Message before Laravel 9).
+                \Eventy::action('email.reply_to_customer.swiftmessage', $message, $from_alias, $thread, $mailbox);
 
                 if ($mailbox->imap_sent_folder) {
-                    \MailHelper::$smtp_mime_message = $swiftmessage->toString();
+                    \MailHelper::$smtp_mime_message = $message->toString();
                 }
-
-                return $swiftmessage;
             });
         }
 

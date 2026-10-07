@@ -30,13 +30,11 @@ abstract class FixtureWebklexMessage extends TestCase {
     protected static $manager;
 
     /**
-     * FixtureTestCase constructor.
-     * @param string|null $name
-     * @param array $data
-     * @param $dataName
+     * Create the client manager before each test.
+     * PHPUnit 10+ does not allow overriding TestCase::__construct().
      */
-    final public function __construct(?string $name = null, array $data = [], $dataName = '') {
-        parent::__construct($name, $data, $dataName);
+    protected function setUp(): void {
+        parent::setUp();
 
         self::$manager = new ClientManager([
             'options' => [
@@ -54,7 +52,6 @@ abstract class FixtureWebklexMessage extends TestCase {
                 ],
             ],
         ]);
-        return self::$manager;
     }
 
     /**

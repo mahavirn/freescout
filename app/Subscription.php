@@ -12,6 +12,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class Subscription extends Model
 {
+    use \App\Misc\SerializesDates;
+
     // Event types
     // Changing ticket status does not fire event
     const EVENT_TYPE_NEW = 1;

@@ -7,6 +7,8 @@ use Watson\Rememberable\Rememberable;
 
 class MailboxUser extends Model
 {
+    use \App\Misc\SerializesDates;
+
     use Rememberable;
     // This is obligatory.
     public $rememberCacheDriver = 'array';

@@ -225,7 +225,7 @@ abstract class Repository implements RepositoryInterface, Countable
             return $this->cache;
         }
 
-        return $this->app['cache']->remember($this->config('cache.key'), $this->config('cache.lifetime'), function () {
+        return $this->app['cache']->remember($this->config('cache.key'), now()->addMinutes((int)$this->config('cache.lifetime')), function () {
 
             $modules = $this->scan();
 

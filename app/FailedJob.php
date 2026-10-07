@@ -6,10 +6,14 @@ use Illuminate\Database\Eloquent\Model;
 
 class FailedJob extends Model
 {
+    use \App\Misc\SerializesDates;
+
     /**
      * Automatically converted into Carbon dates.
      */
-    protected $dates = ['failed_at'];
+    protected $casts = [
+        'failed_at' => 'datetime',
+    ];
 
 	public $payload_decoded = null;
 

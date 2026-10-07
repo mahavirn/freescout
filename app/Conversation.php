@@ -16,11 +16,12 @@ use App\Events\ConversationUserChanged;
 use App\Events\ConversationCustomerChanged;
 use App\Events\UserMovedConversation;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\Input;
 use Watson\Rememberable\Rememberable;
 
 class Conversation extends Model
 {
+    use \App\Misc\SerializesDates;
+
     use Rememberable;
     // This is obligatory.
     public $rememberCacheDriver = 'array';
@@ -221,11 +222,6 @@ class Conversation extends Model
     public static $custom_number_cache = null;
 
     /**
-     * Automatically converted into Carbon dates.
-     */
-    protected $dates = ['created_at', 'updated_at', 'last_reply_at', 'closed_at', 'user_updated_at'];
-
-    /**
      * Attributes which are not fillable using fill() method.
      */
     protected $guarded = ['id', 'folder_id'];
@@ -235,6 +231,9 @@ class Conversation extends Model
      */
     protected $casts = [
         'meta' => 'array',
+        'last_reply_at' => 'datetime',
+        'closed_at' => 'datetime',
+        'user_updated_at' => 'datetime',
     ];
 
     /**
@@ -1178,8 +1177,8 @@ class Conversation extends Model
     {
         if (!empty(request()->folder_id)) {
             return request()->folder_id;
-        } elseif (!empty(Input::get('folder_id'))) {
-            return Input::get('folder_id');
+        } elseif (!empty(request()->input('folder_id'))) {
+            return request()->input('folder_id');
         }
 
         return '';

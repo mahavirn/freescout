@@ -144,7 +144,6 @@ class Mail
     /**
      * Used to get SMTP queue id when sending emails to customers.
      */
-    public static $smtp_queue_id_plugin_registered = false;
     
     /**
      * Used to store the last sent email message.
@@ -234,7 +233,9 @@ class Mail
      */
     public static function reapplyMailConfig()
     {
-        // Check hash to avoid recreating MailServiceProvider.
+        self::applyMailerConfig();
+
+        // Check hash to avoid recreating mailer.
         $mail_config_hash = md5(json_encode(\Config::get('mail')));
 
         if (self::$last_mail_config_hash != $mail_config_hash) {
@@ -243,18 +244,41 @@ class Mail
             return false;
         }
 
-        // Without doing this, Swift mailer uses old config values
+        // Without doing this, mailer uses old config values
         // if there were emails sent with previous config.
+        app('mail.manager')->forgetMailers();
         \App::forgetInstance('mailer');
-        \App::forgetInstance('swift.mailer');
-        \App::forgetInstance('swift.transport');
-
-        (new \Illuminate\Mail\MailServiceProvider(app()))->register();
-        // We have to update Mailer facade manually, as it does not happen automatically
-        // and previous instance of app('mailer') is used.
-        \Mail::swap(app('mailer'));
 
         \Eventy::action('mail.reapply_mail_config');
+    }
+
+    /**
+     * Copy flat FreeScout mail options (mail.driver, mail.host, ...)
+     * into Laravel mailer config (mail.default, mail.mailers.*).
+     */
+    public static function applyMailerConfig()
+    {
+        $driver = \Config::get('mail.driver') ?: self::MAIL_DRIVER_MAIL;
+
+        $mailer = \Config::get('mail.mailers.'.$driver, []);
+        $mailer['transport'] = $mailer['transport'] ?? $driver;
+
+        if ($driver == self::MAIL_DRIVER_SMTP) {
+            $mailer = array_merge($mailer, [
+                'host'       => \Config::get('mail.host'),
+                'port'       => \Config::get('mail.port'),
+                'encryption' => \Config::get('mail.encryption'),
+                'username'   => \Config::get('mail.username'),
+                'password'   => \Config::get('mail.password'),
+                'auth_mode'  => \Config::get('mail.auth_mode'),
+                'timeout'    => \Config::get('mail.smtp_timeout'),
+            ]);
+        } elseif ($driver == self::MAIL_DRIVER_SENDMAIL) {
+            $mailer['path'] = \Config::get('mail.sendmail');
+        }
+
+        \Config::set('mail.mailers.'.$driver, $mailer);
+        \Config::set('mail.default', $driver);
     }
 
     /**
@@ -414,12 +438,33 @@ class Mail
         return Option::get('mail_driver', 'mail');
     }
 
-    public static function registerSmtpLogger()
+    /**
+     * SMTP conversation log from the mail transport exception.
+     */
+    public static function getSmtpLog($e)
     {
-        $logger = new \Swift_Plugins_Loggers_ArrayLogger();
-        \Mail::getSwiftMailer()->registerPlugin(new \Swift_Plugins_LoggerPlugin($logger));
+        if (!method_exists($e, 'getDebug')) {
+            return '';
+        }
 
-        return $logger;
+        // Hide credentials sent during authentication:
+        // "> AUTH PLAIN xxx", "> AUTH XOAUTH2 xxx" and client lines following "< 334".
+        $lines = preg_split("#\r?\n#", $e->getDebug());
+        $in_auth = false;
+        foreach ($lines as $i => $line) {
+            if (preg_match('#^> AUTH (\S+)(\s+\S+)?#i', $line, $m)) {
+                $lines[$i] = '> AUTH '.$m[1].(!empty($m[2]) ? ' ***' : '');
+                $in_auth = true;
+            } elseif ($in_auth && strpos($line, '< 334') === 0) {
+                continue;
+            } elseif ($in_auth && strpos($line, '> ') === 0) {
+                $lines[$i] = '> ***';
+            } elseif (strpos($line, '< ') === 0) {
+                $in_auth = false;
+            }
+        }
+
+        return implode("\n", $lines);
     }
 
     /**
@@ -436,22 +481,23 @@ class Mail
         if ($mailbox) {
             // Configure mail driver according to Mailbox settings
             \MailHelper::setMailDriver($mailbox);
-            $smtp_logger = self::registerSmtpLogger();
 
             $status_message = '';
+            $smtp_log = '';
 
             try {
                 \Mail::to([$to])->send(new \App\Mail\Test($mailbox));
             } catch (\Exception $e) {
                 // We come here in case SMTP server unavailable for example
                 $status_message = $e->getMessage();
+                $smtp_log = self::getSmtpLog($e);
             }
         } else {
             // System email
             \MailHelper::setSystemMailDriver();
-            $smtp_logger = self::registerSmtpLogger();
 
             $status_message = '';
+            $smtp_log = '';
 
             try {
                 \Mail::to([['name' => '', 'email' => $to]])
@@ -459,16 +505,15 @@ class Mail
             } catch (\Exception $e) {
                 // We come here in case SMTP server unavailable for example
                 $status_message = $e->getMessage();
+                $smtp_log = self::getSmtpLog($e);
             }
         }
 
-        if (\Mail::failures() || $status_message) {
+        if ($status_message) {
             SendLog::log(null, null, $to, SendLog::MAIL_TYPE_TEST, SendLog::STATUS_SEND_ERROR, null, null, $status_message);
-            if ($status_message) {
-                $result['msg'] = $status_message;
-            }
+            $result['msg'] = $status_message;
             $result['status'] = 'error';
-            $result['log'] = $smtp_logger->dump();
+            $result['log'] = self::sanitizeSmtpStatusMessage($smtp_log);
         } else {
             SendLog::log(null, null, $to, SendLog::MAIL_TYPE_TEST, SendLog::STATUS_ACCEPTED);
 
@@ -1278,6 +1323,53 @@ class Mail
         }
     }
 
+    /**
+     * Set Message-ID and custom headers on Symfony email message.
+     *
+     * @param \Symfony\Component\Mime\Email $message
+     * @param array $new_headers ['Message-ID' => '...', 'Header-Name' => 'value']
+     */
+    public static function setMessageHeaders($message, $new_headers)
+    {
+        $headers = $message->getHeaders();
+
+        foreach ($new_headers as $header => $value) {
+            if ($header == 'Message-ID') {
+                $headers->remove('Message-ID');
+                $headers->addIdHeader('Message-ID', trim($value, '<> '));
+            } else {
+                $headers->addTextHeader($header, $value);
+            }
+        }
+    }
+
+    /**
+     * Set mailbox alias as From, if it is one of the mailbox aliases.
+     * Takes into account mailbox From Name setting.
+     *
+     * @param \Symfony\Component\Mime\Email $message
+     */
+    public static function setFromAlias($message, $mailbox, $from_alias, $user = null, $conversation = null)
+    {
+        $aliases = $mailbox->getAliases();
+
+        if (!array_key_exists($from_alias, $aliases)) {
+            return;
+        }
+
+        $from_alias_name = $aliases[$from_alias] ?? '';
+
+        $mailbox_mail_from = $mailbox->getMailFrom($user, $conversation);
+        if ($mailbox_mail_from['name'] == $mailbox->name && $from_alias_name) {
+            // Use name from alias.
+        } else {
+            // User name or custom.
+            $from_alias_name = $mailbox_mail_from['name'];
+        }
+
+        $message->from(new \Symfony\Component\Mime\Address($from_alias, (string)$from_alias_name));
+    }
+
     public static function prepareMailable($mailable)
     {
         $custom_headers_str = config('app.custom_mail_headers');
@@ -1288,7 +1380,7 @@ class Mail
 
         $custom_headers = explode(';', $custom_headers_str);
 
-        $mailable->withSwiftMessage(function ($swiftmessage) use ($custom_headers) {
+        $mailable->withSymfonyMessage(function ($swiftmessage) use ($custom_headers) {
             $headers = $swiftmessage->getHeaders();
 
             foreach ($custom_headers as $custom_header) {

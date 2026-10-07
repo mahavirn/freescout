@@ -12,6 +12,8 @@ use Symfony\Component\Console\Output\BufferedOutput;
 
 class Module extends Model
 {
+    use \App\Misc\SerializesDates;
+
     const IMG_DEFAULT = '/img/default-module.png';
 
     public $timestamps = false;

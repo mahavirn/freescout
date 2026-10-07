@@ -1,9 +1,18 @@
 <?php
 
-use Faker\Generator as Faker;
+namespace Database\Factories;
 
-$factory->define(App\Email::class, function (Faker $faker) {
-    return [
-        'email' => $faker->unique()->safeEmail,
-    ];
-});
+use App\Email;
+use Illuminate\Database\Eloquent\Factories\Factory;
+
+class EmailFactory extends Factory
+{
+    protected $model = Email::class;
+
+    public function definition()
+    {
+        return [
+            'email' => $this->faker->unique()->safeEmail,
+        ];
+    }
+}

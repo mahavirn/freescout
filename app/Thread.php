@@ -17,6 +17,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class Thread extends Model
 {
+    use \App\Misc\SerializesDates;
+
     /**
      * By whom action performed (source_via).
      */
@@ -176,16 +178,11 @@ class Thread extends Model
         self::META_FORWARD_CHILD_CONVERSATION_ID => 'forward_child_conversation_id',
     ];
 
-    protected $dates = [
-        'opened_at',
-        'created_at',
-        'updated_at',
-        'deleted_at',
-        'edited_at',
-    ];
-
     protected $casts = [
         'meta' => 'array',
+        'opened_at' => 'datetime',
+        'deleted_at' => 'datetime',
+        'edited_at' => 'datetime',
     ];
 
     /**

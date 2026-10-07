@@ -11,6 +11,14 @@ class VerifyCsrfToken extends Middleware
      *
      * @var array
      */
+    /**
+     * Do not send XSRF-TOKEN cookie as it's not needed.
+     * https://github.com/laravel/ideas/issues/873
+     *
+     * @var bool
+     */
+    protected $addHttpCookie = false;
+
     protected $except = [
         //
     ];

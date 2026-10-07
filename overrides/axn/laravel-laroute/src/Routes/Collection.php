@@ -12,8 +12,15 @@ class Collection extends BaseCollection
 {
     public $module = null;
 
-    public function __construct(\Illuminate\Routing\RouteCollection $routes, $filter, $namespace, $module = null)
+    public function __construct($routes = [], $filter = 'all', $namespace = '', $module = null)
     {
+        // Collection methods (map(), filter(), ...) create new instances from arrays.
+        if (!$routes instanceof \Illuminate\Routing\RouteCollection) {
+            parent::__construct($routes);
+
+            return;
+        }
+
         $this->module = $module;
         $this->items = $this->parseRoutes($routes, $filter, $namespace);
     }

@@ -71,10 +71,7 @@ class CreateThreadsTable extends Migration
             $table->timestamp('opened_at')->nullable();
             $table->timestamps();
 
-            if (DB::connection()->getPDO()->getAttribute(PDO::ATTR_DRIVER_NAME) == 'mysql') {
-                // https://github.com/laravel/framework/issues/9293#issuecomment-373229281
-                $table->unique([DB::raw('message_id(191)')], 'threads_message_id_index');
-            } else {
+            if (DB::connection()->getDriverName() != 'mysql') {
                 $table->unique('message_id', 'threads_message_id_index');
             }
 
@@ -82,6 +79,11 @@ class CreateThreadsTable extends Migration
             $table->index(['conversation_id', 'type', 'from', 'customer_id']);
             $table->index(['conversation_id', 'created_at']);
         });
+
+        // https://github.com/laravel/framework/issues/9293#issuecomment-373229281
+        if (DB::connection()->getDriverName() == 'mysql') {
+            DB::statement('ALTER TABLE `'.DB::getTablePrefix().'threads` ADD UNIQUE `threads_message_id_index` (`message_id`(191))');
+        }
     }
 
     /**

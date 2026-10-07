@@ -198,7 +198,7 @@ class SystemController extends Controller
         // Check new version if enabled
         $new_version_available = false;
         if (!\Config::get('app.disable_updating')) {
-            $latest_version = \Cache::remember('latest_version', 15, function () {
+            $latest_version = \Cache::remember('latest_version', now()->addMinutes(15), function () {
                 try {
                     return \Updater::getVersionAvailable();
                 } catch (\Exception $e) {
@@ -341,6 +341,10 @@ class SystemController extends Controller
         switch ($request->action) {
 
             case 'update':
+                if (\Config::get('app.disable_updating')) {
+                    $response['msg'] = __('Updating is disabled');
+                    break;
+                }
                 try {
                     $status = \Updater::update();
 

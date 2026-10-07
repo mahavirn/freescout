@@ -2,28 +2,36 @@
 
 namespace App\Http\Middleware;
 
-use Fideloper\Proxy\TrustProxies as Middleware;
+use Illuminate\Http\Middleware\TrustProxies as Middleware;
 use Illuminate\Http\Request;
 
 class TrustProxies extends Middleware
 {
     /**
-     * The trusted proxies for this application.
+     * The headers that should be used to detect proxies.
      *
-     * @var array
+     * @var int
      */
-    protected $proxies;
+    protected $headers =
+        Request::HEADER_FORWARDED |
+        Request::HEADER_X_FORWARDED_FOR |
+        Request::HEADER_X_FORWARDED_HOST |
+        Request::HEADER_X_FORWARDED_PORT |
+        Request::HEADER_X_FORWARDED_PROTO;
 
     /**
-     * The current proxy header mappings.
+     * The trusted proxies for this application (APP_TRUSTED_PROXIES).
      *
-     * @var array
+     * @return array|string|null
      */
-    protected $headers = [
-        Request::HEADER_FORWARDED         => 'FORWARDED',
-        Request::HEADER_X_FORWARDED_FOR   => 'X_FORWARDED_FOR',
-        Request::HEADER_X_FORWARDED_HOST  => 'X_FORWARDED_HOST',
-        Request::HEADER_X_FORWARDED_PORT  => 'X_FORWARDED_PORT',
-        Request::HEADER_X_FORWARDED_PROTO => 'X_FORWARDED_PROTO',
-    ];
+    protected function proxies()
+    {
+        if (static::$alwaysTrustProxies) {
+            return static::$alwaysTrustProxies;
+        }
+        $proxies = config('trustedproxy.proxies');
+
+        // '*' and '**' are passed as strings.
+        return is_array($proxies) ? array_filter($proxies) : $proxies;
+    }
 }

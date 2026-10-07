@@ -1,13 +1,21 @@
 <?php
 
-use App\Customer;
-use Faker\Generator as Faker;
+namespace Database\Factories;
 
-$factory->define(App\Customer::class, function (Faker $faker) {
-    return [
-        'first_name' => $faker->firstName,
-        'last_name'  => $faker->lastName,
-        'job_title'  => $faker->jobTitle,
-        'phones'     => json_encode(Customer::formatPhones([['value' => $faker->phoneNumber, 'type' => Customer::PHONE_TYPE_WORK]])),
-    ];
-});
+use App\Customer;
+use Illuminate\Database\Eloquent\Factories\Factory;
+
+class CustomerFactory extends Factory
+{
+    protected $model = Customer::class;
+
+    public function definition()
+    {
+        return [
+            'first_name' => $this->faker->firstName,
+            'last_name'  => $this->faker->lastName,
+            'job_title'  => $this->faker->jobTitle,
+            'phones'     => json_encode(Customer::formatPhones([['value' => $this->faker->phoneNumber, 'type' => Customer::PHONE_TYPE_WORK]])),
+        ];
+    }
+}

@@ -20,25 +20,6 @@ foreach ($required_functions as $required_function) {
 
 $root_dir = realpath(__DIR__.'/..').'/';
 
-// Dotenv library for reading .env files
-$vendor_files = [
-    'vlucas/phpdotenv/src/Dotenv.php',
-    'vlucas/phpdotenv/src/Loader.php',
-    'vlucas/phpdotenv/src/Validator.php',
-    'vlucas/phpdotenv/src/Exception/ExceptionInterface.php',
-    'vlucas/phpdotenv/src/Exception/InvalidCallbackException.php',
-    'vlucas/phpdotenv/src/Exception/InvalidFileException.php',
-    'vlucas/phpdotenv/src/Exception/InvalidPathException.php',
-    'vlucas/phpdotenv/src/Exception/ValidationException.php',
-];
-foreach ($vendor_files as $vendor_file) {
-    if (file_exists($root_dir.'vendor/'.$vendor_file)) {
-        require_once $root_dir.'vendor/'.$vendor_file;
-    } else {
-        require_once $root_dir.'overrides/'.$vendor_file;
-    }
-}
-
 // Symfony proces
 //require_once($root_dir.'vendor/symfony/process/Process.php');
 
@@ -79,13 +60,11 @@ function getAppKey($root_dir, $check_cache = true)
         }
     }
 
-    // Read .env file into $_ENV
-    try {
-        $dotenv = new Dotenv\Dotenv($root_dir);
-        // If using load() if $_ENV['APP_KEY'] was present in .env before it will not be updated when reading
-        $dotenv->overload();
-    } catch (\Exception $e) {
-        // Do nothing
+    // Read APP_KEY from .env file (Dotenv is not loaded here).
+    if (file_exists($root_dir.'.env')
+        && preg_match('/^APP_KEY=[ \t]*["\']?([^"\'\r\n]*)/m', file_get_contents($root_dir.'.env'), $m)
+    ) {
+        $_ENV['APP_KEY'] = trim($m[1]);
     }
 
     if (!empty($_ENV['APP_KEY'])) {

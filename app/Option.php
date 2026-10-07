@@ -9,6 +9,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class Option extends Model
 {
+    use \App\Misc\SerializesDates;
+
     // Value returned when cache contains default value.
     const CACHE_DEFAULT_VALUE = 'CACHE_DEFAULT_VALUE';
 

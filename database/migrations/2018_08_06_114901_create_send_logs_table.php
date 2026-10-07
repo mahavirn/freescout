@@ -31,16 +31,18 @@ class CreateSendLogsTable extends Migration
             $table->timestamps();
 
             // Indexes
-            if (DB::connection()->getPDO()->getAttribute(PDO::ATTR_DRIVER_NAME) == 'mysql') {
-                // https://github.com/laravel/framework/issues/9293#issuecomment-373229281
-                $table->index([DB::raw('message_id(191)')], 'send_logs_message_id_index');
-            } else {
+            if (DB::connection()->getDriverName() != 'mysql') {
                 $table->index(['message_id'], 'send_logs_message_id_index');
             }
 
             // Used when sending auto reply
             $table->index(['customer_id', 'mail_type', 'created_at']);
         });
+
+        // https://github.com/laravel/framework/issues/9293#issuecomment-373229281
+        if (DB::connection()->getDriverName() == 'mysql') {
+            DB::statement('ALTER TABLE `'.DB::getTablePrefix().'send_logs` ADD INDEX `send_logs_message_id_index` (`message_id`(191))');
+        }
     }
 
     /**

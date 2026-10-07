@@ -1,21 +1,23 @@
 <?php
 
+namespace Database\Factories;
+
 use App\Folder;
-use Faker\Generator as Faker;
+use App\Mailbox;
+use Illuminate\Database\Eloquent\Factories\Factory;
 
-$factory->define(App\Folder::class, function (Faker $faker, $params) {
-    $mailbox_id = null;
-    if (!empty($params['mailbox_id'])) {
-        $mailbox_id = $params['mailbox_id'];
-    } else {
-        $mailbox = App\Mailbox::inRandomOrder()->first();
-        if ($mailbox) {
-            $mailbox_id = $mailbox->id;
-        }
+class FolderFactory extends Factory
+{
+    protected $model = Folder::class;
+
+    public function definition()
+    {
+        return [
+            // Random mailbox if mailbox_id is not passed.
+            'mailbox_id' => function () {
+                return Mailbox::inRandomOrder()->value('id');
+            },
+            'type'       => Folder::TYPE_UNASSIGNED,
+        ];
     }
-
-    return [
-        'mailbox_id' => $mailbox_id,
-        'type'       => Folder::TYPE_UNASSIGNED,
-    ];
-});
+}

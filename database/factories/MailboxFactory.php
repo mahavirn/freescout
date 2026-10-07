@@ -1,16 +1,25 @@
 <?php
 
-use Faker\Generator as Faker;
+namespace Database\Factories;
 
-$factory->define(App\Mailbox::class, function (Faker $faker) {
-    $name = $faker->company;
-    $email = $faker->unique()->companyEmail;
-    $domain = explode('@', $email)[1];
+use App\Mailbox;
+use Illuminate\Database\Eloquent\Factories\Factory;
 
-    return [
-        'name'      => $name,
-        'email'     => $email,
-        'aliases'   => 'support@'.$domain.',help@'.$domain.', contact@'.$domain,
-        //'signature' => '--<br/>'.$name,
-    ];
-});
+class MailboxFactory extends Factory
+{
+    protected $model = Mailbox::class;
+
+    public function definition()
+    {
+        $name = $this->faker->company;
+        $email = $this->faker->unique()->companyEmail;
+        $domain = explode('@', $email)[1];
+
+        return [
+            'name'      => $name,
+            'email'     => $email,
+            'aliases'   => 'support@'.$domain.',help@'.$domain.', contact@'.$domain,
+            //'signature' => '--<br/>'.$name,
+        ];
+    }
+}

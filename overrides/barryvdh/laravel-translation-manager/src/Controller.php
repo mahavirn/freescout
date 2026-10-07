@@ -77,7 +77,7 @@ class Controller extends BaseController
             ->with('numTranslations', $numTranslations)
             ->with('numTodo', $numTodo)
             ->with('numChanged', $numChanged)
-            ->with('editUrl', action('\Barryvdh\TranslationManager\Controller@postEdit', [$group]))
+            ->with('editUrl', $group ? action('\Barryvdh\TranslationManager\Controller@postEdit', [$group]) : null)
             ->with('deleteEnabled', (bool) $this->manager->getConfig('delete_enabled'));
     }
 

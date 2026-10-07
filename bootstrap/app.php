@@ -11,7 +11,7 @@
 |
 */
 
-$app = new Illuminate\Foundation\Application(
+$app = new App\Misc\Application(
     realpath(__DIR__.'/../')
 );
 
@@ -39,6 +39,16 @@ $app->singleton(
 $app->singleton(
     Illuminate\Contracts\Debug\ExceptionHandler::class,
     App\Exceptions\Handler::class
+);
+
+$app->bind(
+    Illuminate\Foundation\Bootstrap\HandleExceptions::class,
+    App\Bootstrap\HandleExceptions::class
+);
+
+$app->bind(
+    Illuminate\Foundation\Bootstrap\LoadEnvironmentVariables::class,
+    App\Bootstrap\LoadEnvironmentVariables::class
 );
 
 /*

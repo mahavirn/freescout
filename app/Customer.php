@@ -12,6 +12,8 @@ use Watson\Rememberable\Rememberable;
 
 class Customer extends Model
 {
+    use \App\Misc\SerializesDates;
+
     use Rememberable;
     // This is obligatory.
     public $rememberCacheDriver = 'array';

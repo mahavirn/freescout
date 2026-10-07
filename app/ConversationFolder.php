@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class ConversationFolder extends Model
 {
+    use \App\Misc\SerializesDates;
+
     /**
      * The table associated with the model.
      *

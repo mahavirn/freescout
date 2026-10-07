@@ -6,6 +6,8 @@ use Spatie\Activitylog\Models\Activity;
 
 class ActivityLog extends Activity
 {
+    use \App\Misc\SerializesDates;
+
     const NAME_USER = 'users';
     const NAME_OUT_EMAILS = 'out_emails'; // used to display send_log in Logs
     const NAME_EMAILS_SENDING = 'send_errors';

@@ -9,6 +9,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class SendLog extends Model
 {
+    use \App\Misc\SerializesDates;
+
     /**
      * Status of the email sent to the customer or user.
      * https://documentation.mailgun.com/en/latest/api-events.html#event-types.

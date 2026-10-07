@@ -18,6 +18,13 @@ class AppServiceProvider extends ServiceProvider
         // "SQLSTATE[42000]: Syntax error or access violation: 1071 Specified key was too long; max key length is 767 bytes"
         Schema::defaultStringLength(191);
 
+        $this->registerMailTransports();
+
+        // Laravel 5.5 defaults used by FreeScout views:
+        // {{ }} does not double encode HTML entities and pagination uses Bootstrap 3 markup.
+        \Blade::withoutDoubleEncoding();
+        \Illuminate\Pagination\Paginator::useBootstrapThree();
+
         // Models observers
         \App\Mailbox::observe(\App\Observers\MailboxObserver::class);
         // Eloquent events for this table are not called automatically, so need to be called manually.
@@ -59,8 +66,47 @@ class AppServiceProvider extends ServiceProvider
      *
      * @return void
      */
+    /**
+     * FreeScout mail transports and Swift Mailer compatibility.
+     */
+    protected function registerMailTransports()
+    {
+        $this->app->afterResolving('mail.manager', function ($manager) {
+            $manager->extend('smtp', function ($config) {
+                return \App\Misc\SmtpTransport::fromConfig($config);
+            });
+            // PHP mail() function. Symfony Mailer does not have mail() transport,
+            // so sendmail binary from php.ini sendmail_path is used (the same as mail() does).
+            $manager->extend('mail', function ($config) {
+                return (new \Symfony\Component\Mailer\Transport\NativeTransportFactory())
+                    ->create(new \Symfony\Component\Mailer\Transport\Dsn('native', 'default'));
+            });
+        });
+
+        // Swift Mailer returned rejected recipients via Mail::failures().
+        // Symfony Mailer throws an exception instead, so there are never failures here.
+        \Illuminate\Mail\Mailer::macro('failures', function () {
+            return [];
+        });
+    }
+
     public function register()
     {
+        // FreeScout URL generator (x_ params, APP_URL as root, subdirectory).
+        // Laravel's own extend('url') callbacks are still applied.
+        $this->app->singleton('url', function ($app) {
+            $routes = $app['router']->getRoutes();
+            $app->instance('routes', $routes);
+
+            return new \App\Misc\UrlGenerator(
+                $routes,
+                $app->rebinding('request', function ($app, $request) {
+                    $app['url']->setRequest($request);
+                }),
+                $app['config']['app.asset_url']
+            );
+        });
+
         // Forse HTTPS if using CloudFlare "Flexible SSL"
         // https://support.cloudflare.com/hc/en-us/articles/200170416-What-do-the-SSL-options-mean-
         if (\Helper::isHttps()) {

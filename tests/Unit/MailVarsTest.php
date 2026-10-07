@@ -4,6 +4,7 @@ namespace Tests\Unit;
 
 use App\Misc\Mail;
 use Generator;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
 
 class MailVarsTest extends TestCase
@@ -137,9 +138,8 @@ class MailVarsTest extends TestCase
      * @param array        $data               An array of data to pass to the method.
      * @param bool         $escape             Whether to escape the result.
      * @param bool         $removeNonReplaced  Whether to remove non-replaced variables.
-     *
-     * @dataProvider providerReplaceMailVars
      */
+    #[DataProvider('providerReplaceMailVars')]
     public function testReplaceMailVars(
         $expectedText,
         string $inputText,

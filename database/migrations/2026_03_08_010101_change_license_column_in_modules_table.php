@@ -17,7 +17,7 @@ class ChangeLIcenseColumnInModulesTable extends Migration
             $table->text('license')->nullable()->change();
         });
         foreach (\App\Module::get() as $module) {
-            $license = $module->getOriginal('license');
+            $license = $module->getRawOriginal('license');
             if ($license) {
                 $module->setLicenseAttribute($license);
                 $module->save();

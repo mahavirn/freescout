@@ -30,34 +30,34 @@ class ConversationChangeCustomerTest extends TestCase
         \Session::start();
 
         // Create admin user
-        $this->admin = factory(User::class)->create([
+        $this->admin = \Database\Factories\UserFactory::new()->create([
             'role' => User::ROLE_ADMIN,
         ]);
 
         // Create mailbox
-        $this->mailbox = factory(Mailbox::class)->create();
+        $this->mailbox = \Database\Factories\MailboxFactory::new()->create();
         $this->mailbox->users()->sync([$this->admin->id]);
 
         // Create unprivileged user with NO mailbox access
-        $this->unprivUser = factory(User::class)->create([
+        $this->unprivUser = \Database\Factories\UserFactory::new()->create([
             'role' => User::ROLE_USER,
         ]);
 
         // Create customers
-        $this->originalCustomer = factory(Customer::class)->create([
+        $this->originalCustomer = \Database\Factories\CustomerFactory::new()->create([
             'first_name' => 'Original',
             'last_name'  => 'Customer',
         ]);
         $this->originalCustomer->syncEmails(['original.customer@example.org']);
 
-        $this->attackerCustomer = factory(Customer::class)->create([
+        $this->attackerCustomer = \Database\Factories\CustomerFactory::new()->create([
             'first_name' => 'Attacker',
             'last_name'  => 'Evil',
         ]);
         $this->attackerCustomer->syncEmails(['attacker@example.org']);
 
         // Create conversation belonging to original customer.
-        $this->conversation = factory(Conversation::class)->create([
+        $this->conversation = \Database\Factories\ConversationFactory::new()->create([
             'mailbox_id'     => $this->mailbox->id,
             'customer_id'    => $this->originalCustomer->id,
             'customer_email' => 'original.customer@example.org',

@@ -48,11 +48,11 @@ class LogViewerController extends BaseController
     {
         $folderFiles = [];
         if ($this->request->input('f')) {
-            $this->log_viewer->setFolder(Crypt::decrypt($this->request->input('f')));
+            $this->log_viewer->setFolder(basename(Crypt::decryptString($this->request->input('f'))));
             $folderFiles = $this->log_viewer->getFolderFiles(true);
         }
         if ($this->request->input('l')) {
-            $this->log_viewer->setFile(Crypt::decrypt($this->request->input('l')));
+            $this->log_viewer->setFile(basename(Crypt::decryptString($this->request->input('l'))));
         }
 
         if ($early_return = $this->earlyReturn()) {
@@ -61,7 +61,7 @@ class LogViewerController extends BaseController
 
         $data = [
             'logs' => $this->log_viewer->all(),
-            'folders' => [], //$this->log_viewer->getFolders(),
+            'folders' => [], // FreeScout: folders are not shown.
             'current_folder' => $this->log_viewer->getFolderName(),
             'folder_files' => $folderFiles,
             'files' => $this->log_viewer->getFiles(true),
@@ -78,8 +78,10 @@ class LogViewerController extends BaseController
 
         if (is_array($data['logs']) && count($data['logs']) > 0) {
             $firstLog = reset($data['logs']);
-            if (!$firstLog['context'] && !$firstLog['level']) {
-                $data['standardFormat'] = false;
+            if ($firstLog) {
+                if (!$firstLog['context'] && !$firstLog['level']) {
+                    $data['standardFormat'] = false;
+                }
             }
         }
 
@@ -93,7 +95,7 @@ class LogViewerController extends BaseController
     private function earlyReturn()
     {
         if ($this->request->input('f')) {
-            $this->log_viewer->setFolder(Crypt::decrypt($this->request->input('f')));
+            $this->log_viewer->setFolder(basename(Crypt::decryptString($this->request->input('f'))));
         }
 
         if ($this->request->input('dl')) {
@@ -104,7 +106,7 @@ class LogViewerController extends BaseController
         } elseif ($this->request->has('del')) {
             app('files')->delete($this->pathFromInput('del'));
             return $this->redirect($this->request->url());
-        } elseif ($this->request->has('delall') && \Session::token() == $this->request->get('_token')) {
+        } elseif ($this->request->has('delall') && hash_equals((string) \Session::token(), (string) $this->request->get('_token'))) {
             $files = ($this->log_viewer->getFolderName())
                         ? $this->log_viewer->getFolderFiles(true)
                         : $this->log_viewer->getFiles(true);
@@ -123,7 +125,7 @@ class LogViewerController extends BaseController
      */
     private function pathFromInput($input_string)
     {
-        return $this->log_viewer->pathToLogFile(Crypt::decrypt($this->request->input($input_string)));
+        return $this->log_viewer->pathToLogFile(basename(Crypt::decryptString($this->request->input($input_string))));
     }
 
     /**

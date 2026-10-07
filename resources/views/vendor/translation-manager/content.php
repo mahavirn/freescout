@@ -63,7 +63,7 @@
                     <p><?php if (!isset($group)) : ?>2.<?php endif ?>Choose a group to display translations. <?php /* (if no groups are visisble, make sure you have imported translations).*/ ?></p>
                     <select name="group" id="group" class="form-control group-select" autocomplete="off">
                         <?php foreach($groups as $key => $value): ?>
-                            <option value="<?php echo $key ?>"<?php echo $key == $group ? ' selected':'' ?>><?php if (strstr($value, 'a group')): ?>-- <?php endif ?><?php echo e(ucfirst(trim($value, '_'))) ?><?php if (strstr($value, 'a group')): ?> --<?php endif ?></option>
+                            <option value="<?php echo $key ?>"<?php echo $key == $group ? ' selected':'' ?>><?php if (strstr($value, 'a group')): ?>-- <?php endif ?><?php echo e(ucfirst(trim($value, '_')), false) ?><?php if (strstr($value, 'a group')): ?> --<?php endif ?></option>
                         <?php endforeach; ?>
                     </select>
                 </div>
@@ -83,7 +83,7 @@
                         <select name="locale" id="locale" class="form-control group-locale-select" autocomplete="off">
                             <?php foreach($locales as $locale): ?>
                                 <?php /*if ($locale != 'en'):*/ ?>
-                                    <option value="<?php echo e($locale) ?>"<?php echo $locale == $selected_locale ? ' selected':'' ?>><?php echo \Helper::getLocaleData($locale, 'name') ?> (<?php echo \Helper::getLocaleData($locale, 'name_en') ?>)</option>
+                                    <option value="<?php echo e($locale, false) ?>"<?php echo $locale == $selected_locale ? ' selected':'' ?>><?php echo \Helper::getLocaleData($locale, 'name') ?> (<?php echo \Helper::getLocaleData($locale, 'name_en') ?>)</option>
                                 <?php /*endif*/ ?>
                             <?php endforeach; ?>
                         </select>
@@ -127,7 +127,7 @@
                         <th width="15%">Key</th>
                         <?php foreach ($locales as $locale): ?>
                             <?php if ($locale == $selected_locale || ($locale == 'en' && $group[0] != '_')): ?>
-                                <th><?= e($locale) ?></th>
+                                <th><?= e($locale, false) ?></th>
                             <?php endif ?>
                         <?php endforeach; ?>
                         <?php /*if ($deleteEnabled): ?>
@@ -138,8 +138,8 @@
                     <tbody>
 
                     <?php foreach ($translations as $key => $translation): ?>
-                        <tr id="<?php echo e($key) ?>">
-                            <td><?php echo e($key) ?></td>
+                        <tr id="<?php echo e($key, false) ?>">
+                            <td><?php echo e($key, false) ?></td>
                             <?php foreach ($locales as $locale): ?>
                                 <?php if (!($locale == $selected_locale || ($locale == 'en' && $group[0] != '_'))): ?>
                                     <?php continue; ?>
@@ -148,8 +148,8 @@
 
                                 <td>
                                     <a href="#edit"
-                                       class="editable status-<?php echo $t ? (int)$t->status : 0 ?> locale-<?php echo e($locale) ?>"
-                                       data-locale="<?php echo e($locale) ?>" data-name="<?php echo e($locale) . "|" . e($key) ?>"
+                                       class="editable status-<?php echo $t ? (int)$t->status : 0 ?> locale-<?php echo e($locale, false) ?>"
+                                       data-locale="<?php echo e($locale, false) ?>" data-name="<?php echo e($locale, false) . "|" . e($key, false) ?>"
                                        id="username" data-type="textarea" data-pk="<?php echo $t ? (int)$t->id : 0 ?>"
                                        data-url="<?php echo $editUrl ?>"
                                        data-title="Enter translation"><?php echo $t ? e($t->value ?? '', false) : '' ?></a>
@@ -159,7 +159,7 @@
                                 <td>
                                     <a href="<?php echo action('\Barryvdh\TranslationManager\Controller@postDelete', [$group, $key]) ?>"
                                        class="delete-key"
-                                       data-confirm="Are you sure you want to delete the translations for '<?php echo e($key) ?>?"><span
+                                       data-confirm="Are you sure you want to delete the translations for '<?php echo e($key, false) ?>?"><span
                                                 class="glyphicon glyphicon-trash"></span></a>
                                 </td>
                             <?php endif;*/ ?>
@@ -178,9 +178,9 @@
                         <?php foreach($locales as $locale): ?>
                             <li>
                                 <div class="form-group">
-                                    <strong><?php echo e($locale) ?></strong>
+                                    <strong><?php echo e($locale, false) ?></strong>
                                     <?php if (!in_array($locale, config('app.locales'))): ?>
-                                        <button type="submit" name="remove-locale[<?php echo e($locale) ?>]" class="btn btn-link btn-xs" data-disable-with="...">
+                                        <button type="submit" name="remove-locale[<?php echo e($locale, false) ?>]" class="btn btn-link btn-xs" data-disable-with="...">
                                             &times;
                                         </button>
                                     <?php endif ?>

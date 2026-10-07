@@ -25,11 +25,8 @@ class Test extends Mailable
     {
         \MailHelper::prepareMailable($this);
         
-        $this->withSwiftMessage(function ($swiftmessage) {
-            $headers = $swiftmessage->getHeaders();
-            $headers->addTextHeader('X-FreeScout-Mail-Type', 'test.mailbox');
-
-            return $swiftmessage;
+        $this->withSymfonyMessage(function ($message) {
+            $message->getHeaders()->addTextHeader('X-FreeScout-Mail-Type', 'test.mailbox');
         });
 
         $message = $this->subject(__(':app_name Test Email', ['app_name' => \Config::get('app.name')]));

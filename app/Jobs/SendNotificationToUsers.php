@@ -207,7 +207,7 @@ class SendNotificationToUsers implements ShouldQueue
                     // So we may consider that the email has been successfully sent.
                     // Otherwise this email may be sent again and again.
                     if ($this->attempts() >= 3
-                        && preg_match("#^Connection to .* Timed Out$#", $last_send_exception->getMessage())
+                        && preg_match("#Connection to .* timed out\.?$#i", $last_send_exception->getMessage())
                         && \MailHelper::$smtp_data_sent
                     ) {
                         $this->fail($last_send_exception);
@@ -235,7 +235,7 @@ class SendNotificationToUsers implements ShouldQueue
      *
      * @return void
      */
-    public function failed(\Exception $e)
+    public function failed(\Throwable $e)
     {
         // Write to activity log
         activity()

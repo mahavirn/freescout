@@ -19,7 +19,7 @@ class EncryptMailboxPassword extends Migration
             });
 
             foreach (\App\Mailbox::whereNotNull('in_password')->get() as $Mailbox) {
-                $Mailbox->in_password = $Mailbox->getOriginal('in_password');
+                $Mailbox->in_password = $Mailbox->getRawOriginal('in_password');
                 $Mailbox->save();
             }
         }

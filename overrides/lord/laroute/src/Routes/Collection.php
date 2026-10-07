@@ -8,8 +8,15 @@ use Lord\Laroute\Routes\Exceptions\ZeroRoutesException;
 
 class Collection extends \Illuminate\Support\Collection
 {
-    public function __construct(RouteCollection $routes, $filter, $namespace)
+    public function __construct($routes = [], $filter = 'all', $namespace = '')
     {
+        // Collection methods (map(), filter(), ...) create new instances from arrays.
+        if (!$routes instanceof RouteCollection) {
+            parent::__construct($routes);
+
+            return;
+        }
+
         $this->items = $this->parseRoutes($routes, $filter, $namespace);
     }
 

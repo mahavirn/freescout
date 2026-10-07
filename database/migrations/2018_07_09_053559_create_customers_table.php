@@ -39,12 +39,16 @@ class CreateCustomersTable extends Migration
 
             // Indexes
             // For ajax search
-            if (DB::connection()->getPDO()->getAttribute(PDO::ATTR_DRIVER_NAME) == 'mysql') {
-                $table->index([DB::raw('first_name(80)'), DB::raw('last_name(80)')]);
-            } else {
+            if (DB::connection()->getDriverName() != 'mysql') {
                 $table->index(['first_name', 'last_name']);
             }
         });
+
+        // Prefix index for ajax search (MySQL). Index name is the same as on existing installations.
+        if (DB::connection()->getDriverName() == 'mysql') {
+            $table = DB::getTablePrefix().'customers';
+            DB::statement('ALTER TABLE `'.$table.'` ADD INDEX `'.$table.'_first_name(80)_last_name(80)_index` (`first_name`(80), `last_name`(80))');
+        }
     }
 
     /**

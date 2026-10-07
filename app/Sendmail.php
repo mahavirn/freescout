@@ -9,6 +9,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class Sendmail extends Model
 {
+    use \App\Misc\SerializesDates;
+
     /**
      * The attributes that are not mass assignable.
      *

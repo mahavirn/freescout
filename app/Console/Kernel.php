@@ -185,7 +185,7 @@ class Kernel extends ConsoleKernel
                 $fetch_command->everyMinute();
                 break;
         }
-        \Cache::put('fetch_mutex_name', $fetch_command->mutexName(), (int)config('app.fetch_max_execution_time'));
+        \Cache::put('fetch_mutex_name', $fetch_command->mutexName(), now()->addMinutes((int)config('app.fetch_max_execution_time')));
 
         $schedule = \Eventy::filter('schedule', $schedule);
 

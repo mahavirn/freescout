@@ -1,41 +1,39 @@
 <?php
 
+namespace Database\Factories;
+
 use App\Customer;
 use App\Thread;
-use App\User;
-use Faker\Generator as Faker;
+use Illuminate\Database\Eloquent\Factories\Factory;
 
-$factory->define(Thread::class, function (Faker $faker, $params) {
-    if (!empty($params['customer_id'])) {
-        $customer_id = $params['customer_id'];
-    } else {
-        // Pick random customer
-        //$customer_id =  $faker->randomElement(App\Customer::pluck('id')->toArray());
-        $customer = Customer::inRandomOrder()->first();
-        if (!$customer) {
-            $customer = factory(App\Customer::class)->create();
-        }
-        $customer_id = $customer->id;
-    }
-    if (!empty($params['to'])) {
-        $to = $params['to'];
-    } elseif ($customer) {
-        $to = $customer->getMainEmail();
-    } else {
-        $to = json_encode([$faker->unique()->safeEmail]);
-    }
+class ThreadFactory extends Factory
+{
+    protected $model = Thread::class;
 
-    return [
-        'type' => Thread::TYPE_CUSTOMER,
-        //'conversation_id' => ,
-        'customer_id'             => $customer_id,
-        'state'                   => Thread::STATE_PUBLISHED,
-        'body'                    => $faker->text(500),
-        'to'                      => json_encode([$to]),
-        'cc'                      => json_encode([$faker->unique()->safeEmail]),
-        'bcc'                     => json_encode([$faker->unique()->safeEmail]),
-        'source_via'              => Thread::PERSON_CUSTOMER,
-        'source_type'             => Thread::SOURCE_TYPE_EMAIL,
-        'created_by_customer_id'  => $customer_id,
-    ];
-});
+    public function definition()
+    {
+        return [
+            'type'                    => Thread::TYPE_CUSTOMER,
+            // Random customer if customer_id is not passed.
+            'customer_id'             => function () {
+                $customer = Customer::inRandomOrder()->first();
+
+                return $customer ? $customer->id : CustomerFactory::new()->create()->id;
+            },
+            'state'                   => Thread::STATE_PUBLISHED,
+            'body'                    => $this->faker->text(500),
+            'to'                      => function (array $attributes) {
+                $customer = Customer::find($attributes['customer_id']);
+
+                return json_encode([$customer ? $customer->getMainEmail() : $this->faker->unique()->safeEmail]);
+            },
+            'cc'                      => json_encode([$this->faker->unique()->safeEmail]),
+            'bcc'                     => json_encode([$this->faker->unique()->safeEmail]),
+            'source_via'              => Thread::PERSON_CUSTOMER,
+            'source_type'             => Thread::SOURCE_TYPE_EMAIL,
+            'created_by_customer_id'  => function (array $attributes) {
+                return $attributes['customer_id'];
+            },
+        ];
+    }
+}

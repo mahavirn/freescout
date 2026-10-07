@@ -13,20 +13,20 @@ class DatabaseSeeder extends Seeder
     public function run()
     {
         // Create users
-        factory(App\User::class, 3)->create();
+        \Database\Factories\UserFactory::new()->count(3)->create();
 
         // Create mailboxes, conversations, etc
-        factory(App\Mailbox::class, 3)->create()->each(function ($m) {
-            $user = factory(App\User::class)->create();
+        \Database\Factories\MailboxFactory::new()->count(3)->create()->each(function ($m) {
+            $user = \Database\Factories\UserFactory::new()->create();
             $m->users()->save($user);
 
             for ($i = 0; $i < 7; $i++) {
-                $customer = factory(App\Customer::class)->create();
+                $customer = \Database\Factories\CustomerFactory::new()->create();
 
-                $email = factory(App\Email::class)->make();
+                $email = \Database\Factories\EmailFactory::new()->make();
                 $customer->emails()->save($email);
 
-                $conversation = factory(App\Conversation::class)->create([
+                $conversation = \Database\Factories\ConversationFactory::new()->create([
                     'created_by_user_id' => $user->id,
                     'mailbox_id'         => $m->id,
                     'customer_id'        => $customer->id,
@@ -35,7 +35,7 @@ class DatabaseSeeder extends Seeder
                     'status'             => array_rand([Conversation::STATUS_ACTIVE => 1, Conversation::STATUS_PENDING => 1]),
                 ]);
 
-                $thread = factory(App\Thread::class)->make([
+                $thread = \Database\Factories\ThreadFactory::new()->make([
                     'customer_id'     => $customer->id,
                     'to'              => $email->email,
                     'conversation_id' => $conversation->id,

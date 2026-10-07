@@ -420,8 +420,12 @@ return [
     |--------------------------------------------------------------------------
     | Disable update checker
     |--------------------------------------------------------------------------
+    |
+    | Enabled by default: this build runs on Laravel 13, and the built-in updater
+    | would install official FreeScout releases (Laravel 5.5) over it.
+    |
     */
-    'disable_updating'    => env('APP_DISABLE_UPDATING', false),
+    'disable_updating'    => env('APP_DISABLE_UPDATING', true),
 
     /*
     |--------------------------------------------------------------------------
@@ -620,11 +624,15 @@ return [
         Illuminate\Translation\TranslationServiceProvider::class,
         Illuminate\Validation\ValidationServiceProvider::class,
         Illuminate\View\ViewServiceProvider::class,
+        Illuminate\Concurrency\ConcurrencyServiceProvider::class,
+        Illuminate\Image\ImageServiceProvider::class,
 
         /*
          * Package Service Providers...
          */
         Devfactory\Minify\MinifyServiceProvider::class,
+        // Laroute is kept in overrides/ (no Laravel 13 release), so it is not auto-discovered.
+        Axn\Laroute\ServiceProvider::class,
         // Debugbar is enabled only if APP_DEBUG=true
         //Barryvdh\Debugbar\ServiceProvider::class,
 

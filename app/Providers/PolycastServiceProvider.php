@@ -107,7 +107,7 @@ class PolycastServiceProvider extends ServiceProvider
                         }
                     }
 
-                    $item->delay = $requested->diffInSeconds($created);
+                    $item->delay = (int)$requested->diffInSeconds($created, true);
                     $item->requested_at = $requested->toDateTimeString();
 
                     return $item;
@@ -174,14 +174,14 @@ class PolycastServiceProvider extends ServiceProvider
                 }
             }
             
-            if (!$cache_data || $replying_changed || ($view_date && $now->diffInSeconds($view_date) > 15)) {
+            if (!$cache_data || $replying_changed || ($view_date && $now->diffInSeconds($view_date, true) > 15)) {
                 // Remember date of the last view in the cache.
                 // Store for 2 minutes.
                 $cache_data = [
                     't' => $now->toDateTimeString(),
                     'r' => (int)$request->data['replying']
                 ];
-                \Cache::put($cache_key, $cache_data, 1);
+                \Cache::put($cache_key, $cache_data, now()->addMinutes(1));
 
                 // Job could not detect when user finishes to view converrsation.
                 // We are using cron.
@@ -192,7 +192,7 @@ class PolycastServiceProvider extends ServiceProvider
                 $conv_key = 'conv_view';
                 $conv_data = \Cache::get($conv_key) ?? [];
                 $conv_data[$viewing_conversation_id][$user->id] = $cache_data;
-                \Cache::put($conv_key, $conv_data, 20 /*minutes*/);
+                \Cache::put($conv_key, $conv_data, now()->addMinutes(20));
                 
                 // \DB::table('polycast_events')->insert([
                 //     'channels'   => json_encode([['name' => 'conv.view']]),

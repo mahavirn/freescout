@@ -11,6 +11,6 @@ class MailboxesTableSeeder extends Seeder
      */
     public function run()
     {
-        factory(App\Mailbox::class, 3)->create();
+        \Database\Factories\MailboxFactory::new()->count(3)->create();
     }
 }

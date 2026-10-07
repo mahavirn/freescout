@@ -46,6 +46,8 @@ return [
         // /storage/app/public
         'local' => [
             'driver'     => 'local',
+            // Throw exceptions on errors, as in Laravel 5.5 (Flysystem 1).
+            'throw'      => true,
             'root'       => storage_path('app/public'),
             'url'        => env('APP_URL').'/storage',
             'visibility' => 'public',
@@ -62,6 +64,8 @@ return [
         // /storage/app
         'local_app' => [
             'driver'     => 'local',
+            // Throw exceptions on errors, as in Laravel 5.5 (Flysystem 1).
+            'throw'      => true,
             'root'       => storage_path('app'),
             'url'        => env('APP_URL').'/storage',
             'visibility' => 'public',
@@ -69,6 +73,8 @@ return [
 
         's3' => [
             'driver' => 's3',
+            // Throw exceptions on errors, as in Laravel 5.5 (Flysystem 1).
+            'throw'      => true,
             'key'    => env('AWS_ACCESS_KEY_ID'),
             'secret' => env('AWS_SECRET_ACCESS_KEY'),
             'region' => env('AWS_DEFAULT_REGION'),

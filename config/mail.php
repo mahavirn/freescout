@@ -143,4 +143,43 @@ return [
 
     'smtp_timeout' => env('MAIL_SMTP_TIMEOUT', 25),
 
+    /*
+    |--------------------------------------------------------------------------
+    | Laravel mailers
+    |--------------------------------------------------------------------------
+    |
+    | FreeScout uses the flat options above (mail.driver, mail.host, ...).
+    | They are copied into 'default' and 'mailers' by \MailHelper::reapplyMailConfig()
+    | every time the mail config changes. Values below are used until then.
+    |
+    */
+    'default' => env('MAIL_DRIVER', 'mail'),
+
+    'mailers' => [
+        'smtp' => [
+            'transport'  => 'smtp',
+            'host'       => env('MAIL_HOST'),
+            'port'       => env('MAIL_PORT'),
+            'encryption' => env('MAIL_ENCRYPTION', 'tls'),
+            'username'   => env('MAIL_USERNAME'),
+            'password'   => env('MAIL_PASSWORD'),
+            'auth_mode'  => env('MAIL_AUTH_MODE', ''),
+            'timeout'    => env('MAIL_SMTP_TIMEOUT', 25),
+        ],
+        'sendmail' => [
+            'transport' => 'sendmail',
+            'path'      => '/usr/sbin/sendmail -bs',
+        ],
+        // PHP mail() function.
+        'mail' => [
+            'transport' => 'mail',
+        ],
+        'log' => [
+            'transport' => 'log',
+        ],
+        'array' => [
+            'transport' => 'array',
+        ],
+    ],
+
 ];

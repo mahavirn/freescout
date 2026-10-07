@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class Folder extends Model
 {
+    use \App\Misc\SerializesDates;
+
     /**
      * Folders types (ids from HelpScout interface).
      */

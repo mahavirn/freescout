@@ -18,7 +18,10 @@ class CreateNotificationsTable extends Migration
         Schema::create('notifications', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->string('type');
-            $table->morphs('notifiable');
+            // Same columns and index as morphs('notifiable') created in Laravel 5.5.
+            $table->unsignedInteger('notifiable_id');
+            $table->string('notifiable_type');
+            $table->index(['notifiable_id', 'notifiable_type']);
             $table->text('data');
             $table->timestamp('read_at')->nullable();
             $table->timestamps();
