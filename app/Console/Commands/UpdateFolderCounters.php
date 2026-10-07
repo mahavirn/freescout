@@ -21,16 +21,6 @@ class UpdateFolderCounters extends Command
     protected $description = 'Update counters for all folders';
 
     /**
-     * Create a new command instance.
-     *
-     * @return void
-     */
-    public function __construct()
-    {
-        parent::__construct();
-    }
-
-    /**
      * Execute the console command.
      *
      * @return mixed

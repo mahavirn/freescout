@@ -22,16 +22,6 @@ class ModuleBuild extends Command
     protected $description = 'Build module or all modules (if module_alias is empty)';
 
     /**
-     * Create a new command instance.
-     *
-     * @return void
-     */
-    public function __construct()
-    {
-        parent::__construct();
-    }
-
-    /**
      * Execute the console command.
      *
      * @return mixed

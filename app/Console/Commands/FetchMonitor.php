@@ -21,16 +21,6 @@ class FetchMonitor extends Command
     protected $description = 'Check emails fetching and send alert if fething is not working or recovered';
 
     /**
-     * Create a new command instance.
-     *
-     * @return void
-     */
-    public function __construct()
-    {
-        parent::__construct();
-    }
-
-    /**
      * Execute the console command.
      *
      * @return mixed

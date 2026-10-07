@@ -24,16 +24,6 @@ class Update extends Command
     protected $description = 'Update application to the latest version from GitHub';
 
     /**
-     * Create a new command instance.
-     *
-     * @return void
-     */
-    public function __construct()
-    {
-        parent::__construct();
-    }
-
-    /**
      * Execute the console command.
      *
      * @return mixed

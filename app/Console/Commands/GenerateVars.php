@@ -25,16 +25,6 @@ class GenerateVars extends Command
     protected $description = 'Generates vars.js file with variables and translated string';
 
     /**
-     * Create a new command instance.
-     *
-     * @return void
-     */
-    public function __construct()
-    {
-        parent::__construct();
-    }
-
-    /**
      * Execute the console command.
      *
      * @return mixed

@@ -23,16 +23,6 @@ class CleanTmp extends Command
     protected $description = 'Remove from system temp folder old FreeScout tempt files to avoid "No space left on device"';
 
     /**
-     * Create a new command instance.
-     *
-     * @return void
-     */
-    public function __construct()
-    {
-        parent::__construct();
-    }
-
-    /**
      * Execute the console command.
      *
      * @return mixed

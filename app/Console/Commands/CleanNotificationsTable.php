@@ -23,16 +23,6 @@ class CleanNotificationsTable extends Command
     protected $description = 'Delete old read records from notifications table.';
 
     /**
-     * Create a new command instance.
-     *
-     * @return void
-     */
-    public function __construct()
-    {
-        parent::__construct();
-    }
-
-    /**
      * Execute the console command.
      *
      * @return mixed

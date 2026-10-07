@@ -24,16 +24,6 @@ class ModuleUpdate extends Command
     protected $description = 'Update all modules or a single module (if module_alias is set)';
 
     /**
-     * Create a new command instance.
-     *
-     * @return void
-     */
-    public function __construct()
-    {
-        parent::__construct();
-    }
-
-    /**
      * Execute the console command.
      *
      * @return mixed

@@ -24,16 +24,6 @@ class ModuleInstall extends Command
     protected $description = 'Install module or all modules (if module_alias is empty): run migrations and create a symlink';
 
     /**
-     * Create a new command instance.
-     *
-     * @return void
-     */
-    public function __construct()
-    {
-        parent::__construct();
-    }
-
-    /**
      * Execute the console command.
      *
      * @return mixed
