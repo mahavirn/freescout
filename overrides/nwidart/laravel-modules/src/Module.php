@@ -237,7 +237,7 @@ abstract class Module extends ServiceProvider
             $file = 'module.json';
         }
 
-        return array_get($this->moduleJson, $file, function () use ($file) {
+        return \Illuminate\Support\Arr::get($this->moduleJson, $file, function () use ($file) {
             // In this Laravel-Modules package caching is not working, so we need to implement it.
             // https://github.com/nWidart/laravel-modules/issues/659
 

@@ -77,6 +77,6 @@ class Collection extends BaseCollection
             }
         }
 
-        return array_only($data, ['uri', 'name']);
+        return \Illuminate\Support\Arr::only($data, ['uri', 'name']);
     }
 }

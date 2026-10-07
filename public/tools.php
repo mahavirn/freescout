@@ -19,28 +19,8 @@ if (preg_match("#^/public\/(.*)#", $_SERVER['REQUEST_URI'], $m) && !empty($m[1])
 
 $root_dir = realpath(__DIR__.'/..').'/';
 
-// Dotenv library for reading .env files
-$vendor_files = [
-    'vlucas/phpdotenv/src/Dotenv.php',
-    'vlucas/phpdotenv/src/Loader.php',
-    'vlucas/phpdotenv/src/Validator.php',
-    'vlucas/phpdotenv/src/Exception/ExceptionInterface.php',
-    'vlucas/phpdotenv/src/Exception/InvalidCallbackException.php',
-    'vlucas/phpdotenv/src/Exception/InvalidFileException.php',
-    'vlucas/phpdotenv/src/Exception/InvalidPathException.php',
-    'symfony/http-foundation/Request.php',
-    'symfony/http-foundation/ParameterBag.php',
-    'symfony/http-foundation/FileBag.php',
-    'symfony/http-foundation/ServerBag.php',
-    'symfony/http-foundation/HeaderBag.php',
-];
-foreach ($vendor_files as $vendor_file) {
-    if (file_exists($root_dir.'vendor/'.$vendor_file)) {
-        require_once $root_dir.'vendor/'.$vendor_file;
-    } else {
-        require_once $root_dir.'overrides/'.$vendor_file;
-    }
-}
+// Composer autoloader only: tools must work even if the app can not boot.
+require_once $root_dir.'vendor/autoload.php';
 
 function throttle($max_requests = 10, $window_seconds = 60)
 {
@@ -79,37 +59,15 @@ function throttle($max_requests = 10, $window_seconds = 60)
     file_put_contents($file, json_encode($events), LOCK_EX);
 }
 
-// Get app key
-//function getAppKey($root_dir, $check_cache = true)
 function getEnvVar($var_name, $root_dir)
 {
-    // First check APP_KEY in cache
-    // if ($check_cache && file_exists($root_dir.'bootstrap/cache/config.php')) {
-    //     $config = include $root_dir.'bootstrap/cache/config.php';
+    static $env = null;
 
-    //     if (!empty($config)) {
-    //         if (!empty($config['app']['key'])) {
-    //             return $config['app']['key'];
-    //         } else {
-    //             return '';
-    //         }
-    //     }
-    // }
-
-    // Read .env file into $_ENV
-    try {
-        $dotenv = new Dotenv\Dotenv($root_dir);
-        // If using load() if $_ENV['APP_KEY'] was present in .env before it will not be updated when reading
-        $dotenv->overload();
-    } catch (\Exception $e) {
-        // Do nothing
+    if ($env === null) {
+        $env = \App\Misc\EnvParser::readFile($root_dir);
     }
 
-    if (!empty($_ENV[$var_name])) {
-        return $_ENV[$var_name];
-    } else {
-        return '';
-    }
+    return $env[$var_name] ?? '';
 }
 
 // Set PHP_PATH in the .env file if PHP on your server can not be executed via "php" console command.
@@ -118,19 +76,12 @@ define('PHP_PATH', trim(getEnvVar('PHP_PATH', $root_dir)));
 
 function clearCache($root_dir, $php_path)
 {
-    if (file_exists($root_dir.'bootstrap/cache/config.php')) {
-        unlink($root_dir.'bootstrap/cache/config.php');
+    // Cached config, packages, services, routes and events.
+    foreach (glob($root_dir.'bootstrap/cache/*.php') ?: [] as $file) {
+        unlink($file);
     }
-    if (file_exists($root_dir.'bootstrap/cache/services.php')) {
-        unlink($root_dir.'bootstrap/cache/services.php');
-    }
-    if (file_exists($root_dir.'bootstrap/cache/packages.php')) {
-        unlink($root_dir.'bootstrap/cache/packages.php');
-    }
-    if (file_exists($root_dir.'bootstrap/cache/routes.php')) {
-        unlink($root_dir.'bootstrap/cache/routes.php');
-    }
-    return shell_exec($php_path.' '.$root_dir.'artisan freescout:clear-cache');
+
+    return shell_exec($php_path.' '.escapeshellarg($root_dir.'artisan').' freescout:clear-cache');
 }
 
 function hashSecret($secret, $root_dir)
@@ -238,15 +189,15 @@ if (!empty($_POST)) {
                         } else {
                             try {
                                 // First check PHP version.
-                                if (!version_compare($version_output, '7.1', '>=')) {
+                                if (!version_compare($version_output, '8.3', '>=')) {
                                     $alerts[] = [
                                         'type' => 'danger',
-                                        'text' => 'Incorrect PHP version (7.1+ is required):<br/><br/><pre>'.htmlspecialchars($version_output).'</pre>',
+                                        'text' => 'Incorrect PHP version (8.3+ is required):<br/><br/><pre>'.htmlspecialchars($version_output).'</pre>',
                                     ];
                                 } else {
                                     if ($_POST['action'] == 'update') {
                                         // Update Now
-                                        $output = shell_exec($php_path.' '.$root_dir.'artisan freescout:update --force');
+                                        $output = shell_exec($php_path.' '.escapeshellarg($root_dir.'artisan').' freescout:update --force');
                                         if (strstr($output, 'Broadcasting queue restart signal')) {
                                             $alerts[] = [
                                                 'type' => 'success',
@@ -260,7 +211,7 @@ if (!empty($_POST)) {
                                         }
                                     } else {
                                         // Migreate DB
-                                        $output = shell_exec($php_path.' '.$root_dir.'artisan migrate --force');
+                                        $output = shell_exec($php_path.' '.escapeshellarg($root_dir.'artisan').' migrate --force');
                                         $alerts[] = [
                                             'type' => 'success',
                                             'text' => 'Migrating finished:<br/><br/><pre>'.htmlspecialchars($output).'</pre>',

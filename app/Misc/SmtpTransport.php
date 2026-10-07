@@ -6,25 +6,26 @@
  * - No automatic STARTTLS when encryption is not set.
  * - Remembers if message data has been passed to the server (\MailHelper::$smtp_data_sent).
  * - Adds the last SMTP command to error messages (without sensitive data).
- * - Remembers SMTP queue ID returned by the server (https://github.com/freescout-helpdesk/freescout/issues/3330).
+ * - Rejected recipients do not stop sending to accepted ones (available via Mail::failures()).
+ * - SMTP queue ID returned by the server is used as SentMessage ID (https://github.com/freescout-helpdesk/freescout/issues/3330).
  */
 
 namespace App\Misc;
 
 use Symfony\Component\Mailer\Exception\TransportException;
 use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
+use Symfony\Component\Mailer\Exception\UnexpectedResponseException;
 use Symfony\Component\Mailer\SentMessage;
 use Symfony\Component\Mailer\Transport\Smtp\Auth\XOAuth2Authenticator;
 use Symfony\Component\Mailer\Transport\Smtp\EsmtpTransport;
 
 class SmtpTransport extends EsmtpTransport
 {
-    /**
-     * SMTP queue ID of the last sent message.
-     */
-    public static $last_smtp_queue_id = null;
-
     protected $last_command = '';
+
+    protected $recipients_count = 0;
+
+    protected $failed_recipients = [];
 
     /**
      * Create transport from Laravel mailer config.
@@ -63,9 +64,18 @@ class SmtpTransport extends EsmtpTransport
     protected function doSend(SentMessage $message): void
     {
         \MailHelper::$smtp_data_sent = false;
-        self::$last_smtp_queue_id = null;
+        $this->recipients_count = count($message->getEnvelope()->getRecipients());
+        $this->failed_recipients = [];
 
         parent::doSend($message);
+    }
+
+    /**
+     * Recipients rejected by the server during the last sending.
+     */
+    public function getFailedRecipients(): array
+    {
+        return $this->failed_recipients;
     }
 
     public function executeCommand(string $command, array $codes): string
@@ -78,8 +88,20 @@ class SmtpTransport extends EsmtpTransport
             $this->last_command = $command;
         }
 
+        if ($command === "DATA\r\n" && $this->recipients_count && count($this->failed_recipients) >= $this->recipients_count) {
+            throw new TransportException('No valid recipients: '.implode(', ', $this->failed_recipients));
+        }
+
         try {
             return parent::executeCommand($command, $codes);
+        } catch (UnexpectedResponseException $e) {
+            // Rejected recipient: continue sending to other recipients.
+            if (preg_match('/^RCPT TO:<(.*)>/', $command, $m)) {
+                $this->failed_recipients[] = $m[1];
+
+                return '';
+            }
+            throw $this->addLastCommandToException($e);
         } catch (TransportExceptionInterface $e) {
             throw $this->addLastCommandToException($e);
         }
@@ -87,11 +109,8 @@ class SmtpTransport extends EsmtpTransport
 
     protected function parseMessageId(string $mtaResult): string
     {
-        if (strpos($mtaResult, 'queued') !== false
-            && preg_match("#queued as ([^\$\r\n ]+)#", $mtaResult, $m)
-            && trim($m[1])
-        ) {
-            self::$last_smtp_queue_id = trim($m[1]);
+        if (preg_match("#queued as ([^\$\r\n ]+)#", $mtaResult, $m) && trim($m[1])) {
+            return trim($m[1]);
         }
 
         return parent::parseMessageId($mtaResult);

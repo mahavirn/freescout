@@ -60,11 +60,10 @@ function getAppKey($root_dir, $check_cache = true)
         }
     }
 
-    // Read APP_KEY from .env file (Dotenv is not loaded here).
-    if (file_exists($root_dir.'.env')
-        && preg_match('/^APP_KEY=[ \t]*["\']?([^"\'\r\n]*)/m', file_get_contents($root_dir.'.env'), $m)
-    ) {
-        $_ENV['APP_KEY'] = trim($m[1]);
+    // Read .env file without booting the app.
+    if (file_exists($root_dir.'vendor/autoload.php')) {
+        require_once $root_dir.'vendor/autoload.php';
+        $_ENV['APP_KEY'] = \App\Misc\EnvParser::readFile($root_dir)['APP_KEY'] ?? '';
     }
 
     if (!empty($_ENV['APP_KEY'])) {

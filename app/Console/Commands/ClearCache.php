@@ -37,19 +37,12 @@ class ClearCache extends Command
      */
     public function handle()
     {
-        $this->call('clear-compiled');
-        $this->call('cache:clear');
-
-        // Remove files from /bootstrap/cache folder.
+        // Application cache, compiled services and packages (bootstrap/cache),
+        // config, events, routes and views.
         // https://github.com/freescout-help-desk/freescout/issues/4536
-        $files = new \Illuminate\Filesystem\Filesystem;
-        $files->delete($this->laravel->getCachedServicesPath());
-        $files->delete($this->laravel->getCachedPackagesPath());
+        $this->call('optimize:clear');
 
-        $this->call('view:clear');
-        if ($this->option('doNotCacheConfig')) {
-            $this->call('config:clear');
-        } else {
+        if (!$this->option('doNotCacheConfig')) {
             $this->call('config:cache');
             // Laravel users `require` function to include config.php
             // If opcache is being used for few seconds config.php is being cached.

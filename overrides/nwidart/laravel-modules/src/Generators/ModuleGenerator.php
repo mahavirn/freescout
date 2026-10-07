@@ -387,7 +387,7 @@ class ModuleGenerator extends Generator
         $replaces = [];
 
         foreach ($keys as $key) {
-            if (method_exists($this, $method = 'get' . ucfirst(studly_case(strtolower($key))) . 'Replacement')) {
+            if (method_exists($this, $method = 'get' . ucfirst(\Illuminate\Support\Str::studly(strtolower($key))) . 'Replacement')) {
                 $replaces[$key] = $this->$method();
             } else {
                 $replaces[$key] = null;

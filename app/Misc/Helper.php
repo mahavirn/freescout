@@ -1281,20 +1281,30 @@ class Helper
     /**
      * Set variable in .evn file.
      */
+    /**
+     * Format value for .env file (standard phpdotenv syntax).
+     * Quoted values are literal: ${VAR} is not replaced.
+     */
+    public static function formatEnvValue($value)
+    {
+        $value = (string)$value;
+
+        if ($value === '' || preg_match('/^[a-zA-Z0-9_]+$/', $value)) {
+            return $value;
+        }
+        if (strpos($value, "'") === false) {
+            return "'".$value."'";
+        }
+
+        return '"'.strtr($value, ['\\' => '\\\\', '"' => '\\"', '$' => '\\$']).'"';
+    }
+
     public static function setEnvFileVar($key, $value)
     {
         $env_path = app()->environmentFilePath();
         $contents = file_get_contents($env_path);
 
-        $value = preg_replace("#[\r\n\t]#", '', $value);
-
-        if (strstr($value, '"')) {
-            // Escape quotes.
-            $value = '"'.str_replace('"', '\"', $value).'"';
-        } elseif (!preg_match('/^[a-zA-Z0-9_]+$/', $value) && $value !== '') {
-            // Add quotes.
-            $value = '"'.$value.'"';
-        }
+        $value = self::formatEnvValue(preg_replace("#[\r\n\t]#", '', $value));
 
         $old_value = '';
         // Match the given key at the beginning of a line
@@ -1536,7 +1546,7 @@ class Helper
         // In some systems queue:work runs on a separate file system,
         // so those queue:work processes may not get illuminate:queue:restart.
         $job_exists = \App\Job::where('queue', 'default')
-            ->where('payload', 'like', '{"displayName":"App\\\\\\\\Jobs\\\\\\\\RestartQueueWorker"%')
+            ->ofJob(\App\Jobs\RestartQueueWorker::class)
             ->exists();
         if (!$job_exists) {
             \App\Jobs\RestartQueueWorker::dispatch()->onQueue('default');
@@ -1686,9 +1696,9 @@ class Helper
         // Connect to the address that was actually validated above, not to
         // the original hostname (which fsockopen() would otherwise resolve
         // again on its own, at a different point in time).
-        $ips = array_first(self::$last_request['ips'] ?? []);
+        $ips = \Illuminate\Support\Arr::first(self::$last_request['ips'] ?? []);
 
-        $host = array_first($ips);
+        $host = \Illuminate\Support\Arr::first($ips);
         if (!$host) {
             // Could not determine host IP.
             return false;
@@ -3392,7 +3402,7 @@ class Helper
         if (!\Helper::memoryCacheEnabled()) {
             return null;
         }
-        return array_get(self::$memory_cache, $key);
+        return \Illuminate\Support\Arr::get(self::$memory_cache, $key);
     }
 
     // "key" may use "dot" notation: conversation.id
@@ -3401,7 +3411,7 @@ class Helper
         if (!\Helper::memoryCacheEnabled()) {
             return false;
         }
-        array_set(self::$memory_cache, $key, $value);
+        \Illuminate\Support\Arr::set(self::$memory_cache, $key, $value);
     }
 
     public static function isLocalStorage($disk = '')

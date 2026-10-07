@@ -94,7 +94,7 @@ class Manager
                 }
 
                 if ($translations && is_array($translations)) {
-                    foreach (array_dot($translations) as $key => $value) {
+                    foreach (\Illuminate\Support\Arr::dot($translations) as $key => $value) {
                         $importedTranslation = $this->importTranslation($key, $value, $locale, $group, $replace);
                         $counter += $importedTranslation ? 1 : 0;
                     }
@@ -516,13 +516,13 @@ class Manager
                 if ($group == '*') {
                     return $this->exportAllTranslations();
                 } else {
-                    if (starts_with($group, 'vendor')) {
+                    if (\Illuminate\Support\Str::startsWith($group, 'vendor')) {
                         $vendor = true;
                     }
                 }
 
                 $tree = $this->makeTree(Translation::ofTranslatedGroup($group)
-                                                    ->orderByGroupKeys(array_get($this->config, 'sort_keys', false))
+                                                    ->orderByGroupKeys(\Illuminate\Support\Arr::get($this->config, 'sort_keys', false))
                                                     ->get());
 
                 foreach ($tree as $locale => $groups) {
@@ -533,7 +533,7 @@ class Manager
                         $locale_path = $locale.DIRECTORY_SEPARATOR.$group;
                         if ($vendor) {
                             $path = $basePath.'/'.$group.'/'.$locale;
-                            $locale_path = str_after($group, '/');
+                            $locale_path = \Illuminate\Support\Str::after($group, '/');
                         }
                         $subfolders = explode(DIRECTORY_SEPARATOR, $locale_path);
                         array_pop($subfolders);
@@ -560,7 +560,7 @@ class Manager
 
         if ($json) {
             $tree = $this->makeTree(Translation::ofTranslatedGroup($group)
-                                                ->orderByGroupKeys(array_get($this->config, 'sort_keys', false))
+                                                ->orderByGroupKeys(\Illuminate\Support\Arr::get($this->config, 'sort_keys', false))
                                                 ->get(), true);
 
             foreach ($tree as $locale => $groups) {
@@ -637,7 +637,7 @@ class Manager
                 $this->jsonSet($array[$translation->locale][$translation->group], $translation->key,
                     $translation->value);
             } else {
-                array_set($array[$translation->locale][$translation->group], $translation->key,
+                \Illuminate\Support\Arr::set($array[$translation->locale][$translation->group], $translation->key,
                     $translation->value);
             }
         }

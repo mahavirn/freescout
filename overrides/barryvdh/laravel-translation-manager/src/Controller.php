@@ -225,6 +225,14 @@ class Controller extends BaseController
         return redirect()->back();
     }
 
+    /**
+     * Route registered by the package, automatic translation is not supported.
+     */
+    public function postTranslateMissing()
+    {
+        abort(404);
+    }
+
     public function postRemoveLocale(Request $request)
     {
         foreach ($request->input('remove-locale', []) as $locale => $val) {

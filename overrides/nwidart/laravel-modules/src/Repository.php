@@ -117,7 +117,7 @@ abstract class Repository implements RepositoryInterface, Countable
         }
 
         $paths = array_map(function ($path) {
-            return ends_with($path, '/*') ? $path : str_finish($path, '/*');
+            return \Illuminate\Support\Str::endsWith($path, '/*') ? $path : \Illuminate\Support\Str::finish($path, '/*');
         }, $paths);
 
         return $paths;

@@ -87,8 +87,6 @@ class ReplyToCustomer extends Mailable
         if (!empty($new_headers) || $from_alias) {
             $mailbox = $this->mailbox;
             $this->withSymfonyMessage(function ($message) use ($new_headers, $from_alias, $mailbox, $thread) {
-                \MailHelper::$smtp_mime_message = '';
-
                 if (!empty($new_headers)) {
                     \MailHelper::setMessageHeaders($message, $new_headers);
                 }
@@ -101,10 +99,6 @@ class ReplyToCustomer extends Mailable
 
                 // $message is \Symfony\Component\Mime\Email (it was \Swift_Message before Laravel 9).
                 \Eventy::action('email.reply_to_customer.swiftmessage', $message, $from_alias, $thread, $mailbox);
-
-                if ($mailbox->imap_sent_folder) {
-                    \MailHelper::$smtp_mime_message = $message->toString();
-                }
             });
         }
 

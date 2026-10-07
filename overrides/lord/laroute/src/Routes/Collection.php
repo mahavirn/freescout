@@ -80,7 +80,7 @@ class Collection extends \Illuminate\Support\Collection
         $methods = $route->methods();
         $name    = $route->getName();
         $action  = $route->getActionName();
-        $laroute = array_get($route->getAction(), 'laroute', null);
+        $laroute = \Illuminate\Support\Arr::get($route->getAction(), 'laroute', null);
 
         if(!empty($namespace)) {
             $a = $route->getAction();

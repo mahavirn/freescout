@@ -447,7 +447,7 @@ class User extends Authenticatable
      */
     public static function generateRandomPassword($length = 8)
     {
-        return str_random($length);
+        return \Illuminate\Support\Str::random($length);
     }
 
     /**
@@ -455,7 +455,7 @@ class User extends Authenticatable
      */
     public static function getDummyPassword()
     {
-        return encrypt('dummy_'.str_random(8));
+        return encrypt('dummy_'.\Illuminate\Support\Str::random(8));
     }
 
     public function isDummyPassword()

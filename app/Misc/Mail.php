@@ -145,10 +145,6 @@ class Mail
      * Used to get SMTP queue id when sending emails to customers.
      */
     
-    /**
-     * Used to store the last sent email message.
-     */
-    public static $smtp_mime_message = '';
 
     /**
      * Indicates that DATA command and mail content has been sent to the mail server.
@@ -449,17 +445,21 @@ class Mail
 
         // Hide credentials sent during authentication:
         // "> AUTH PLAIN xxx", "> AUTH XOAUTH2 xxx" and client lines following "< 334".
+        // Lines may start with a timestamp: "[2026-01-01T00:00:00+00:00] > AUTH LOGIN".
         $lines = preg_split("#\r?\n#", $e->getDebug());
         $in_auth = false;
         foreach ($lines as $i => $line) {
-            if (preg_match('#^> AUTH (\S+)(\s+\S+)?#i', $line, $m)) {
-                $lines[$i] = '> AUTH '.$m[1].(!empty($m[2]) ? ' ***' : '');
-                $in_auth = true;
-            } elseif ($in_auth && strpos($line, '< 334') === 0) {
+            if (!preg_match('#^(\[[^\]]*\] )?([<>]) (.*)$#', $line, $m)) {
                 continue;
-            } elseif ($in_auth && strpos($line, '> ') === 0) {
-                $lines[$i] = '> ***';
-            } elseif (strpos($line, '< ') === 0) {
+            }
+            list(, $prefix, $direction, $text) = $m;
+
+            if ($direction == '>' && preg_match('#^AUTH (\S+)(\s+\S+)?#i', $text, $auth)) {
+                $lines[$i] = $prefix.'> AUTH '.$auth[1].(!empty($auth[2]) ? ' ***' : '');
+                $in_auth = true;
+            } elseif ($in_auth && $direction == '>') {
+                $lines[$i] = $prefix.'> ***';
+            } elseif ($direction == '<' && strpos($text, '334') !== 0) {
                 $in_auth = false;
             }
         }
@@ -932,7 +932,7 @@ class Mail
      */
     public static function generateMessageId($email_address, $raw_body = '')
     {
-        $hash = str_random(16);
+        $hash = \Illuminate\Support\Str::random(16);
         if ($raw_body) {
             $hash = md5(strval($raw_body));
         }
@@ -1372,28 +1372,54 @@ class Mail
 
     public static function prepareMailable($mailable)
     {
-        $custom_headers_str = config('app.custom_mail_headers');
-
-        if (empty($custom_headers_str)) {
+        if (empty(config('app.custom_mail_headers'))) {
             return;
         }
 
-        $custom_headers = explode(';', $custom_headers_str);
-
-        $mailable->withSymfonyMessage(function ($swiftmessage) use ($custom_headers) {
-            $headers = $swiftmessage->getHeaders();
-
-            foreach ($custom_headers as $custom_header) {
-                $header_parts = explode(':', $custom_header);
-
-                $header_name = trim($header_parts[0] ?? '');
-                $header_value = trim($header_parts[1] ?? '');
-                if ($header_name && $header_value) {
-                    $headers->addTextHeader($header_name, $header_value);
-                }
-            }
-            return $swiftmessage;
+        $mailable->withSymfonyMessage(function ($message) {
+            self::addCustomHeaders($message);
         });
+    }
+
+    /**
+     * Add headers from APP_CUSTOM_MAIL_HEADERS ("Name:value;Name2:value2").
+     *
+     * @param \Symfony\Component\Mime\Email $message
+     */
+    public static function addCustomHeaders($message)
+    {
+        $headers = $message->getHeaders();
+
+        foreach (explode(';', (string)config('app.custom_mail_headers')) as $custom_header) {
+            $header_parts = explode(':', $custom_header, 2);
+
+            $name = trim($header_parts[0] ?? '');
+            $value = trim($header_parts[1] ?? '');
+            if (!$name || $value === '') {
+                continue;
+            }
+
+            try {
+                // Standard headers (Reply-To, Return-Path, Date, ...) need typed values.
+                switch (strtolower($name)) {
+                    case 'from':
+                    case 'to':
+                    case 'cc':
+                    case 'bcc':
+                    case 'reply-to':
+                        $value = \Symfony\Component\Mime\Address::createArray(array_map('trim', explode(',', $value)));
+                        break;
+                    case 'date':
+                        $value = new \DateTimeImmutable($value);
+                        break;
+                }
+
+                $headers->remove($name);
+                $headers->addHeader($name, $value);
+            } catch (\Throwable $e) {
+                \Helper::logException($e, '[APP_CUSTOM_MAIL_HEADERS] Invalid header "'.$name.'": ');
+            }
+        }
     }
 
     public static function getImapFolder($client, $folder_name)

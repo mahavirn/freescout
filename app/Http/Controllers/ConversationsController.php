@@ -271,7 +271,7 @@ class ConversationsController extends Controller
             if ($customer->getFullName()) {
                 $name = [$customer->id => $customer->getFullName()];
             }
-            $last_phone = array_last($customer->getPhones());
+            $last_phone = \Illuminate\Support\Arr::last($customer->getPhones());
             if (!empty($last_phone)) {
                 $phone = $last_phone['value'];
             }
@@ -1540,8 +1540,8 @@ class ConversationsController extends Controller
                             $to_array = Conversation::sanitizeEmails($request->to);
                             if (count($to_array)) {
                                 if (count($to_array) == 1) {
-                                    //$customer_email = array_first($to_array);
-                                    $to = array_first($to_array);
+                                    //$customer_email = \Illuminate\Support\Arr::first($to_array);
+                                    $to = \Illuminate\Support\Arr::first($to_array);
                                     $customer = Customer::create($customer_email);
                                 } else {
                                     // Creating a conversation to multiple customers
@@ -3387,7 +3387,7 @@ class ConversationsController extends Controller
         // https://github.com/freescout-helpdesk/freescout/issues/3300
         // Cancel all SendReplyToCustomer jobs for this thread.
         $jobs_to_cancel = \App\Job::where('queue', 'emails')
-            ->where('payload', 'like', '{"displayName":"App\\\\\\\\Jobs\\\\\\\\SendReplyToCustomer"%')
+            ->ofJob(\App\Jobs\SendReplyToCustomer::class)
             ->get();
 
         foreach ($jobs_to_cancel as $job) {

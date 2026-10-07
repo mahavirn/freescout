@@ -6,7 +6,6 @@ use App\Mail\ReplyToCustomer;
 use App\Customer;
 use App\SendLog;
 use App\Thread;
-use App\Misc\SmtpTransport;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -358,8 +357,10 @@ class SendReplyToCustomer implements ShouldQueue
 
         $smtp_queue_id = null;
         
+        $mime_message = '';
+
         try {
-            Mail::to($to)
+            $sent_message = Mail::to($to)
                 ->cc($cc_array)
                 ->bcc($bcc_array)
                 ->send($reply_mail);
@@ -367,8 +368,15 @@ class SendReplyToCustomer implements ShouldQueue
             $this->last_thread->send_status = SendLog::STATUS_ACCEPTED;
             $this->last_thread->save();
 
-            // https://github.com/freescout-helpdesk/freescout/issues/3330
-            $smtp_queue_id = SmtpTransport::$last_smtp_queue_id;
+            if ($sent_message) {
+                // SMTP queue ID returned by the mail server (otherwise it's Message-ID).
+                // https://github.com/freescout-helpdesk/freescout/issues/3330
+                if ($sent_message->getMessageId() != trim($this->message_id, '<>')) {
+                    $smtp_queue_id = $sent_message->getMessageId();
+                }
+                // Message as it has been sent (with attachments), to be saved to IMAP folder.
+                $mime_message = $sent_message->toString();
+            }
         } catch (\Exception $e) {
             // We come here in case SMTP server unavailable for example
             if ($this->attempts() == 1) {
@@ -433,8 +441,6 @@ class SendReplyToCustomer implements ShouldQueue
             }
         }
 
-        SmtpTransport::$last_smtp_queue_id = null;
-
         // Clean error message if email finally has been sent.
         if ($this->last_thread->send_status == SendLog::STATUS_SEND_ERROR) {
             $this->last_thread->send_status = null;
@@ -444,7 +450,7 @@ class SendReplyToCustomer implements ShouldQueue
 
         $imap_sent_folder = $mailbox->imap_sent_folder;
 
-        if ($imap_sent_folder && \MailHelper::$smtp_mime_message) {
+        if ($imap_sent_folder && $mime_message) {
             try {
                 $client = \MailHelper::getMailboxClient($mailbox);
                 
@@ -545,8 +551,7 @@ class SendReplyToCustomer implements ShouldQueue
                     if ($folder) {
                         try {
                             //$save_result = $this->saveEmailToFolder($client, $folder, $envelope, $parts, $bcc_array);
-                            $save_result = $this->saveEmailToFolder($folder, \MailHelper::$smtp_mime_message);
-                            \MailHelper::$smtp_mime_message = '';
+                            $save_result = $this->saveEmailToFolder($folder, $mime_message);
 
                             // Sometimes emails with attachments by some reason are not saved.
                             // https://github.com/freescout-helpdesk/freescout/issues/2749

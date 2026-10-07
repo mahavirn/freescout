@@ -75,18 +75,28 @@ class AppServiceProvider extends ServiceProvider
             $manager->extend('smtp', function ($config) {
                 return \App\Misc\SmtpTransport::fromConfig($config);
             });
-            // PHP mail() function. Symfony Mailer does not have mail() transport,
-            // so sendmail binary from php.ini sendmail_path is used (the same as mail() does).
+            // PHP mail() function: Symfony Mailer does not have a mail() transport,
+            // so the sendmail command from php.ini sendmail_path is used (as mail() does).
             $manager->extend('mail', function ($config) {
-                return (new \Symfony\Component\Mailer\Transport\NativeTransportFactory())
-                    ->create(new \Symfony\Component\Mailer\Transport\Dsn('native', 'default'));
+                if (PHP_OS_FAMILY == 'Windows') {
+                    return (new \Symfony\Component\Mailer\Transport\NativeTransportFactory())
+                        ->create(new \Symfony\Component\Mailer\Transport\Dsn('native', 'default'));
+                }
+                $command = ini_get('sendmail_path') ?: '/usr/sbin/sendmail -t -i';
+                // Symfony requires -t or -bs mode.
+                if (!preg_match('/ -(t|bs)( |$)/', $command)) {
+                    $command .= ' -t -i';
+                }
+
+                return new \Symfony\Component\Mailer\Transport\SendmailTransport($command);
             });
         });
 
-        // Swift Mailer returned rejected recipients via Mail::failures().
-        // Symfony Mailer throws an exception instead, so there are never failures here.
+        // Recipients rejected by the SMTP server during the last sending.
         \Illuminate\Mail\Mailer::macro('failures', function () {
-            return [];
+            $transport = $this->getSymfonyTransport();
+
+            return $transport instanceof \App\Misc\SmtpTransport ? $transport->getFailedRecipients() : [];
         });
     }
 

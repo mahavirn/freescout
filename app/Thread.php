@@ -1692,9 +1692,17 @@ class Thread extends Model
 
     public function getFailedJobId()
     {
-        return \App\FailedJob::where('queue', 'emails')
-            ->where('payload', 'like', '{"displayName":"App\\\\\\\\Jobs\\\\\\\\SendReplyToCustomer"%{i:0;i:'.$this->id.';%')
-            ->value('id');
+        $failed_jobs = \App\FailedJob::where('queue', 'emails')
+            ->ofJob(\App\Jobs\SendReplyToCustomer::class)
+            ->get();
+
+        foreach ($failed_jobs as $failed_job) {
+            if (optional($failed_job->getCommandLastThread())->id == $this->id) {
+                return $failed_job->id;
+            }
+        }
+
+        return null;
     }
 
     // https://github.com/freescout-help-desk/freescout/security/advisories/GHSA-qjr9-6v9q-3r72
