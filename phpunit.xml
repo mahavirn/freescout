@@ -15,7 +15,7 @@
     <env name="SESSION_DRIVER" value="array"/>
     <env name="QUEUE_DRIVER" value="sync"/>
     <env name="QUEUE_CONNECTION" value="sync"/>
-    <env name="APP_KEY" value="value_from_phpunit"/>
+    <env name="APP_KEY" value="base64:ZnJlZXNjb3V0LXBocHVuaXQtdGVzdGluZy1rZXktMzI="/>
   </php>
   <source>
     <include>

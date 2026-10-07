@@ -1,4 +1,4 @@
-@extends('vendor.installer.layouts.master')
+@extends('installer.layouts.master')
 
 @section('template_title')
     {{ trans('installer_messages.final.templateTitle') }}
@@ -63,8 +63,5 @@ php artisan migrate</code></pre>
 
 	<p>{{ trans('installer_messages.final.log') }}</p>
 	<pre><code>{{ $finalStatusMessage }}</code></pre>
-
-	{{--<p>{{ trans('installer_messages.final.env') }}</p>
-	<pre><code>{{ $finalEnvFile }}</code></pre>--}}
 
 @endsection

@@ -1,4 +1,4 @@
-@extends('vendor.installer.layouts.master')
+@extends('installer.layouts.master')
 
 @section('template_title')
     {{ trans('installer_messages.environment.wizard.templateTitle') }}
@@ -40,7 +40,7 @@
             Admin
         </label>
 
-        <form method="post" action="{{ route('LaravelInstaller::environmentSaveWizard', [], false) }}" class="tabs-wrap">
+        <form method="post" action="{{ route('installer.environment.save', [], false) }}" class="tabs-wrap">
             <div class="tab" id="tab1content">
                 <input type="hidden" name="_token" value="{{ csrf_token() }}">
 
@@ -73,8 +73,6 @@
                     <select name="database_connection" id="database_connection">
                         <option value="mysql" @if (old('database_connection', env('DB_CONNECTION', 'mysql')) == 'mysql') selected @endif>MySQL</option>
                         <option value="pgsql" @if (old('database_connection', env('DB_CONNECTION')) == 'pgsql') selected @endif>PostgreSQL</option>
-                        {{--<option value="sqlite" @if (old('database_connection', env('DB_CONNECTION')) == 'sqlite') selected @endif>SQLite</option>--}}
-                        {{--<option value="sqlsrv" @if (old('database_connection', env('DB_CONNECTION')) == 'sqlsrv') selected @endif>SQL Server</option>--}}
                     </select>
                     @if ($errors->has('database_connection'))
                         <span class="error-block">

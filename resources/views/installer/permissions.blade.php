@@ -1,4 +1,4 @@
-@extends('vendor.installer.layouts.master')
+@extends('installer.layouts.master')
 
 @section('template_title')
     {{ trans('installer_messages.permissions.templateTitle') }}
@@ -15,13 +15,12 @@
     <br/>Recommended permissions: <strong>775</strong>
 
     <ul class="list">
-        @foreach($permissions['permissions'] as $permission)
-        <li class="list__item list__item--permissions {{ $permission['isSet'] ? 'success' : 'error' }}">
-            {{ $permission['folder'] }}
+        @foreach ($permissions as $folder => $writable)
+        <li class="list__item list__item--permissions {{ $writable ? 'success' : 'error' }}">
+            {{ $folder }}
             <span>
-                <i class="fa fa-fw fa-{{ $permission['isSet'] ? 'check-circle-o' : 'exclamation-circle' }}"></i>
-                {{-- $permission['permission'] --}}
-                @if (!$permission['isSet'])
+                <i class="fa fa-fw fa-{{ $writable ? 'check-circle-o' : 'exclamation-circle' }}"></i>
+                @if (!$writable)
                     <small>Not writable</small>
                 @endif
             </span>
@@ -29,9 +28,9 @@
         @endforeach
     </ul>
 
-    @if ( ! isset($permissions['errors']))
+    @if ($can_continue)
         <div class="buttons">
-            <a href="{{ route('LaravelInstaller::environmentWizard', [], false) }}" class="button">
+            <a href="{{ route('installer.environment', [], false) }}" class="button">
                 {{ trans('installer_messages.permissions.next') }}
                 <i class="fa fa-angle-right fa-fw" aria-hidden="true"></i>
             </a>

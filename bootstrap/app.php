@@ -18,6 +18,12 @@ $app = Application::configure(basePath: dirname(__DIR__))
                 ->namespace('App\Http\Controllers')
                 ->group(base_path('routes/'.$group.'.php'));
         }
+
+        Route::prefix(ltrim($subdirectory.'/install', '/'))
+            ->name('installer.')
+            ->middleware(['web', \App\Http\Middleware\CanInstall::class])
+            ->namespace('App\Http\Controllers')
+            ->group(base_path('routes/install.php'));
     })
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->use([

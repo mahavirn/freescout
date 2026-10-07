@@ -24,17 +24,17 @@
                 </div>
                 <ul class="step">
                     <li class="step__divider"></li>
-                    <li class="step__item {{ isActive('LaravelInstaller::final') }}">
+                    <li class="step__item {{ \Helper::isRoute('installer.final') ? 'active' : '' }}">
                         <i class="step__icon fa fa-flag-checkered" aria-hidden="true" title="Finish Installation"></i>
                     </li>
                     <li class="step__divider"></li>
-                    <li class="step__item {{ isActive('LaravelInstaller::environment')}} {{ isActive('LaravelInstaller::environmentWizard')}} {{ isActive('LaravelInstaller::environmentClassic')}}">
+                    <li class="step__item {{ \Helper::isRoute('installer.environment') ? 'active' : '' }}">
                         <i class="step__icon fa fa-cog" aria-hidden="true" title="Settings"></i>
                     </li>
                     <li class="step__divider"></li>
-                    <li class="step__item {{ isActive('LaravelInstaller::permissions') }}">
-                        @if(\Helper::isRoute(['LaravelInstaller::environment', 'LaravelInstaller::environmentWizard', 'LaravelInstaller::environmentClassic']))
-                            <a href="{{ route('LaravelInstaller::permissions') }}">
+                    <li class="step__item {{ \Helper::isRoute('installer.permissions') ? 'active' : '' }}">
+                        @if(\Helper::isRoute(['installer.environment']))
+                            <a href="{{ route('installer.permissions') }}">
                                 <i class="step__icon fa fa-key" aria-hidden="true" title="Permissions"></i>
                             </a>
                         @else
@@ -42,9 +42,9 @@
                         @endif
                     </li>
                     <li class="step__divider"></li>
-                    <li class="step__item {{ isActive('LaravelInstaller::requirements') }}">
-                        @if(\Helper::isRoute(['LaravelInstaller::permissions', 'LaravelInstaller::environment', 'LaravelInstaller::environmentWizard', 'LaravelInstaller::environmentClassic']))
-                            <a href="{{ route('LaravelInstaller::requirements') }}">
+                    <li class="step__item {{ \Helper::isRoute('installer.requirements') ? 'active' : '' }}">
+                        @if(\Helper::isRoute(['installer.permissions', 'installer.environment']))
+                            <a href="{{ route('installer.requirements') }}">
                                 <i class="step__icon fa fa-check" aria-hidden="true" title="Server Requirements"></i>
                             </a>
                         @else
@@ -52,9 +52,9 @@
                         @endif
                     </li>
                     <li class="step__divider"></li>
-                    <li class="step__item {{ isActive('LaravelInstaller::welcome') }}">
-                        @if (\Helper::isRoute(['LaravelInstaller::requirements', 'LaravelInstaller::permissions', 'LaravelInstaller::environment', 'LaravelInstaller::environmentWizard', 'LaravelInstaller::environmentClassic']))
-                            <a href="{{ route('LaravelInstaller::welcome') }}">
+                    <li class="step__item {{ \Helper::isRoute('installer.welcome') ? 'active' : '' }}">
+                        @if (\Helper::isRoute(['installer.requirements', 'installer.permissions', 'installer.environment']))
+                            <a href="{{ route('installer.welcome') }}">
                                 <i class="step__icon fa fa-home" aria-hidden="true" title="Start"></i>
                             </a>
                         @else
