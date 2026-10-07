@@ -15,7 +15,7 @@ class $CLASS$ extends ServiceProvider
     {
         $this->registerConfig();
         $this->registerViews();
-        $this->loadMigrationsFrom(__DIR__ . '/../$MIGRATIONS_PATH$');
+        $this->loadMigrationsFrom(__DIR__ . '/../Database/Migrations');
         $this->hooks();
     }
 
@@ -61,7 +61,7 @@ class $CLASS$ extends ServiceProvider
     {
         $viewPath = resource_path('views/modules/$LOWER_NAME$');
 
-        $sourcePath = __DIR__.'/../$PATH_VIEWS$';
+        $sourcePath = __DIR__.'/../Resources/views';
 
         $this->publishes([
             $sourcePath => $viewPath
@@ -79,7 +79,7 @@ class $CLASS$ extends ServiceProvider
      */
     public function registerTranslations()
     {
-        $this->loadJsonTranslationsFrom(__DIR__ .'/../$PATH_LANG$');
+        $this->loadJsonTranslationsFrom(__DIR__ .'/../Resources/lang');
     }
 
 

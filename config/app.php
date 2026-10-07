@@ -601,6 +601,8 @@ return [
         App\Providers\BroadcastServiceProvider::class,
         App\Providers\EventServiceProvider::class,
         App\Providers\PolycastServiceProvider::class,
+        // Replaces auto-discovered Nwidart\Modules\LaravelModulesServiceProvider.
+        App\Providers\ModulesServiceProvider::class,
     ])->toArray(),
 
     /*
@@ -616,6 +618,7 @@ return [
 
     'aliases' => Illuminate\Support\Facades\Facade::defaultAliases()->merge([
         'Minify'       => Devfactory\Minify\Facades\MinifyFacade::class,
+        'Module'       => Nwidart\Modules\Facades\Module::class,
         'Helper'       => App\Misc\Helper::class,
         'MailHelper'   => App\Misc\Mail::class,
         'ModuleHelper' => App\Module::class,

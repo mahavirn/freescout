@@ -50,6 +50,12 @@ Modules keep the same structure (`module.json`, `start.php`, service providers, 
 | `$factory->define()` model factories | Class based factories (`Illuminate\Database\Eloquent\Factories\Factory`) |
 | `$table->index([DB::raw('column(191)')])` | `DB::statement()` with the index SQL |
 
+Modules are loaded by [nwidart/laravel-modules](https://github.com/nWidart/laravel-modules) 13. Module statuses are still stored in the `modules` DB table and the `\Module` facade keeps FreeScout methods: `findByAlias()`, `isActive()`, `getActive()`, `getPublicPath()`, `getModulePath()`, `getModulePathByAlias()`, `getOption()`, `setOption()`. Changes:
+
+- `php artisan module:make` creates the same module structure as before. Other `module:make-*` commands come from laravel-modules 13.
+- `php artisan module:migrate` accepts several module names: `php artisan module:migrate "Saved Replies" Tags`.
+- Module objects no longer have `getRequires()`, `enabled()`, `disabled()` and `notActive()`. Use `get('requires')`, `isEnabled()` and `isDisabled()`.
+
 Eventy hooks with changed arguments:
 
 - `email.reply_to_customer.swiftmessage` receives `Symfony\Component\Mime\Email` (attachments are added after this hook runs).

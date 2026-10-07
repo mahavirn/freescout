@@ -4,13 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Misc\WpApi;
 use Illuminate\Http\Request;
-//use Nwidart\Modules\Traits\CanClearModulesCache;
 use Symfony\Component\Console\Output\BufferedOutput;
 
 class ModulesController extends Controller
 {
-    //use CanClearModulesCache;
-
     /**
      * Create a new controller instance.
      *
@@ -85,12 +82,6 @@ class ModulesController extends Controller
             $module_data = \App\Module::formatModuleData($module_data);
             $installed_modules[] = $module_data;
         }
-
-        // No need, as we update modules list on each page load
-        // Clear modules cache if any module has been added or removed
-        // if (count($modules) != count(Module::getCached())) {
-        //     $this->clearCache();
-        // }
 
         // Prepare directory modules
         if (is_array($modules_directory)) {
@@ -421,8 +412,8 @@ class ModulesController extends Controller
 
                                     if (\File::exists($old_path) && !\File::exists($correct_path)) {
                                         \File::move($old_path, $correct_path);
-                                         // Re-scan and re-cache modules.
-                                        \Module::scan();
+                                        // Re-scan modules.
+                                        \Module::clearCache();
                                     }
                                     break;
                                 }

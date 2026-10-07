@@ -1,0 +1,12 @@
+{
+    "name": "Broken Module",
+    "alias": "brokenmodule",
+    "description": "Module failing on registration, used in tests.",
+    "version": "1.0.0",
+    "providers": [],
+    "aliases": {},
+    "files": [
+        "start.php"
+    ],
+    "requires": []
+}

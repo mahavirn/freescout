@@ -35,7 +35,7 @@
         "laravel/tinker": "^3.0",
         "laravel/ui": "^4.6",
         "mews/purifier": "dev-customized",
-        "nwidart/laravel-modules": "2.7.0",
+        "nwidart/laravel-modules": "^13.0",
         "rap2hpoutre/laravel-log-viewer": "^3.1",
         "spatie/laravel-activitylog": "^4.12",
         "tedivm/jshrink": "^1.7",
@@ -63,8 +63,6 @@
             "Database\\Factories\\": "database/factories/",
             "Modules\\": "Modules/",
             "Webklex\\PHPIMAP\\": "overrides/webklex/php-imap/src/",
-            "Nwidart\\Modules\\": "overrides/nwidart/laravel-modules/src/",
-            "Nwidart\\Modules\\Generators\\": "overrides/nwidart/laravel-modules/src/Generators/",
             "Barryvdh\\TranslationManager\\": "overrides/barryvdh/laravel-translation-manager/src/",
             "TorMorten\\Eventy\\": "overrides/tormjens/eventy/src/",
             "Rap2hpoutre\\LaravelLogViewer\\": "overrides/rap2hpoutre/laravel-log-viewer/src/Rap2hpoutre/LaravelLogViewer/",
@@ -77,13 +75,6 @@
             "Modules/",
             "vendor/barryvdh/laravel-translation-manager/src/Controller.php",
             "vendor/barryvdh/laravel-translation-manager/src/Manager.php",
-            "vendor/nwidart/laravel-modules/src/Commands/FactoryMakeCommand.php",
-            "vendor/nwidart/laravel-modules/src/Commands/MigrationMakeCommand.php",
-            "vendor/nwidart/laravel-modules/src/Generators/ModuleGenerator.php",
-            "vendor/nwidart/laravel-modules/src/Json.php",
-            "vendor/nwidart/laravel-modules/src/Module.php",
-            "vendor/nwidart/laravel-modules/src/Process/Installer.php",
-            "vendor/nwidart/laravel-modules/src/Repository.php",
             "vendor/rap2hpoutre/laravel-log-viewer/src/Rap2hpoutre/LaravelLogViewer/LaravelLogViewer.php",
             "vendor/rap2hpoutre/laravel-log-viewer/src/controllers/LogViewerController.php",
             "vendor/tormjens/eventy/src/Event.php",
@@ -111,7 +102,9 @@
     },
     "extra": {
         "laravel": {
-            "dont-discover": []
+            "dont-discover": [
+                "nwidart/laravel-modules"
+            ]
         }
     },
     "scripts": {
@@ -129,6 +122,9 @@
     "config": {
         "preferred-install": "dist",
         "sort-packages": true,
+        "allow-plugins": {
+            "wikimedia/composer-merge-plugin": false
+        },
         "optimize-autoloader": true,
         "audit": {
             "ignore": {

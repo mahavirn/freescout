@@ -1,0 +1,10 @@
+{
+    "name": "Test Module",
+    "alias": "testmodule",
+    "description": "Module used in tests.",
+    "version": "1.0.0",
+    "providers": [],
+    "aliases": {},
+    "files": [],
+    "requires": []
+}

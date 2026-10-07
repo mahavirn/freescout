@@ -53,7 +53,7 @@ class ModuleInstall extends Command
 
             $modules_aliases = [];
             foreach ($modules as $module) {
-                $modules_aliases[] = $module->name;
+                $modules_aliases[] = $module->getName();
             }
             if (!$modules_aliases) {
                 $this->error('No modules found');
@@ -89,7 +89,7 @@ class ModuleInstall extends Command
     // There is similar function in \App\Module.
     public function createModulePublicSymlink($module)
     {
-        $from = public_path('modules').DIRECTORY_SEPARATOR.$module->alias;
+        $from = public_path('modules').DIRECTORY_SEPARATOR.$module->getAlias();
         $to = $module->getExtraPath('Public');
 
         // file_exists() may throw "open_basedir restriction in effect".

@@ -28,7 +28,7 @@ class Module extends Model
         if (!self::$modules) {
             // At this stage modules table may not exist
             try {
-                self::$modules = self::all();
+                self::$modules = self::all()->keyBy('alias');
             } catch (\Exception $e) {
                 // Do nothing
             }
@@ -188,7 +188,7 @@ class Module extends Model
     {
         $modules = self::getCached();
         if ($modules) {
-            return self::getCached()->where('alias', $alias)->first();
+            return $modules->get($alias);
         } else {
             return;
         }
