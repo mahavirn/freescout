@@ -27,8 +27,7 @@ class SendNotificationToUsers implements ShouldQueue
 
     /**
      * The number of seconds the job can run before timing out.
-     * fwrite() function in /vendor/swiftmailer/swiftmailer/lib/classes/Swift/Transport/StreamBuffer.php
-     * in some cases may stuck and continue infinitely. This blocks queue:work and no other jobs are processed.
+     * Writing to the SMTP connection in some cases may stuck and continue infinitely. This blocks queue:work and no other jobs are processed.
      * So we need to set the timeout. On timeout the whole queue:work process is being killed by Laravel.
      */
     public $timeout = 120;
@@ -160,7 +159,7 @@ class SendNotificationToUsers implements ShouldQueue
             try {
                 Mail::to([['name' => $user->getFullName(), 'email' => $user->email]])
                     ->send(new UserNotification($user, $this->conversation, $this->threads, $headers, $from, $mailbox));
-            } catch (\Exception $e) {
+            } catch (\Throwable $e) {
                 // We come here if SMTP server unavailable for example
                 activity()
                     ->causedBy($user)

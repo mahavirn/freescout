@@ -39,8 +39,7 @@ class SendReplyToCustomer implements ShouldQueue
     
     /**
      * The number of seconds the job can run before timing out.
-     * fwrite() function in /vendor/swiftmailer/swiftmailer/lib/classes/Swift/Transport/StreamBuffer.php
-     * in some cases may stuck and continue infinitely. This blocks queue:work and no other jobs are processed.
+     * Writing to the SMTP connection in some cases may stuck and continue infinitely. This blocks queue:work and no other jobs are processed.
      * So we need to set the timeout. On timeout the whole queue:work process is being killed by Laravel.
      */
     public $timeout = 120;
@@ -375,7 +374,12 @@ class SendReplyToCustomer implements ShouldQueue
                     $smtp_queue_id = $sent_message->getMessageId();
                 }
                 // Message as it has been sent (with attachments), to be saved to IMAP folder.
+                // Bcc is not sent in headers, but is shown in the copy saved to the Sent folder.
                 $mime_message = $sent_message->toString();
+                if ($bcc_array) {
+                    $bcc_header = new \Symfony\Component\Mime\Header\MailboxListHeader('Bcc', \Symfony\Component\Mime\Address::createArray($bcc_array));
+                    $mime_message = $bcc_header->toString()."\r\n".$mime_message;
+                }
             }
         } catch (\Exception $e) {
             // We come here in case SMTP server unavailable for example

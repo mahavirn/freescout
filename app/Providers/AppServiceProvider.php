@@ -67,7 +67,7 @@ class AppServiceProvider extends ServiceProvider
      * @return void
      */
     /**
-     * FreeScout mail transports and Swift Mailer compatibility.
+     * FreeScout mail transports.
      */
     protected function registerMailTransports()
     {
@@ -75,20 +75,9 @@ class AppServiceProvider extends ServiceProvider
             $manager->extend('smtp', function ($config) {
                 return \App\Misc\SmtpTransport::fromConfig($config);
             });
-            // PHP mail() function: Symfony Mailer does not have a mail() transport,
-            // so the sendmail command from php.ini sendmail_path is used (as mail() does).
+            // "PHP mail()" outgoing method.
             $manager->extend('mail', function ($config) {
-                if (PHP_OS_FAMILY == 'Windows') {
-                    return (new \Symfony\Component\Mailer\Transport\NativeTransportFactory())
-                        ->create(new \Symfony\Component\Mailer\Transport\Dsn('native', 'default'));
-                }
-                $command = ini_get('sendmail_path') ?: '/usr/sbin/sendmail -t -i';
-                // Symfony requires -t or -bs mode.
-                if (!preg_match('/ -(t|bs)( |$)/', $command)) {
-                    $command .= ' -t -i';
-                }
-
-                return new \Symfony\Component\Mailer\Transport\SendmailTransport($command);
+                return new \App\Misc\PhpMailTransport();
             });
         });
 

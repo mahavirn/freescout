@@ -29,6 +29,7 @@ Notes:
 - `.env` files written by previous versions keep working. New values are written in standard [phpdotenv](https://github.com/vlucas/phpdotenv) syntax.
 - Users are logged out once, as the session cookie format has changed.
 - Logging uses `config/logging.php` (`APP_LOG`, `APP_LOG_LEVEL`). Daily log files are named `storage/logs/laravel-YYYY-MM-DD.log`.
+- SMTP EHLO uses the `APP_URL` host. Set `MAIL_EHLO_DOMAIN` in `.env` to use another host name.
 
 ## Notes for module developers
 

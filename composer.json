@@ -83,6 +83,7 @@
             "Modules/",
             "vendor/barryvdh/laravel-translation-manager/src/Controller.php",
             "vendor/barryvdh/laravel-translation-manager/src/Manager.php",
+            "vendor/nwidart/laravel-modules/src/Commands/FactoryMakeCommand.php",
             "vendor/nwidart/laravel-modules/src/Commands/MigrationMakeCommand.php",
             "vendor/nwidart/laravel-modules/src/Generators/ModuleGenerator.php",
             "vendor/nwidart/laravel-modules/src/Json.php",

@@ -2746,22 +2746,6 @@ class Helper
         return $finfo->buffer($data);
     }
 
-    /**
-     * https://php.watch/versions/8.0/deprecated-reflectionparameter-methods
-     */
-    public static function getClass($param)
-    {
-        return $param->getType() && !$param->getType()->isBuiltin() ? new \ReflectionClass(method_exists($param->getType(), 'getName') ? $param->getType()->getName() : $param->getClass()->name) : null;
-    }
-
-    /**
-     * https://php.watch/versions/8.0/deprecated-reflectionparameter-methods
-     */
-    public static function getClassName($param)
-    {
-        return $param->getType() && !$param->getType()->isBuiltin() ? method_exists($param->getType(), 'getName') ? $param->getType()->getName() : $param->getClass()->name : null;
-    }
-
     public static function getWebCronHash()
     {
         return hash_hmac('sha512', 'web_cron_hash', config('app.key'));

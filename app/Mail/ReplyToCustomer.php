@@ -97,7 +97,6 @@ class ReplyToCustomer extends Mailable
                     \MailHelper::setFromAlias($message, $mailbox, $from_alias, $thread->created_by_user, $thread->conversation);
                 }
 
-                // $message is \Symfony\Component\Mime\Email (it was \Swift_Message before Laravel 9).
                 \Eventy::action('email.reply_to_customer.swiftmessage', $message, $from_alias, $thread, $mailbox);
             });
         }
@@ -146,23 +145,5 @@ class ReplyToCustomer extends Mailable
     //              ->addCustomHeaders($message) // This is new!
     //              ->runCallbacks($message);
     //     });
-    // }
-
-    /*
-     * Add custom headers to the message.
-     *
-     * @param \Illuminate\Mail\Message $message
-     * @return $this
-     */
-    // protected function addCustomHeaders($message)
-    // {
-    //     $swift = $message->getSwiftMessage();
-    //     $headers = $swift->getHeaders();
-
-    //     // By some reason $this->headers are empty here
-    //     foreach ($this->headers as $header => $value) {
-    //         $headers->addTextHeader($header, $value);
-    //     }
-    //     return $this;
     // }
 }

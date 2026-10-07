@@ -268,6 +268,7 @@ class Mail
                 'password'   => \Config::get('mail.password'),
                 'auth_mode'  => \Config::get('mail.auth_mode'),
                 'timeout'    => \Config::get('mail.smtp_timeout'),
+                'local_domain' => \Config::get('mail.local_domain'),
             ]);
         } elseif ($driver == self::MAIL_DRIVER_SENDMAIL) {
             $mailer['path'] = \Config::get('mail.sendmail');
@@ -292,6 +293,7 @@ class Mail
 
         // SMTP
         if (\Config::get('mail.driver') == self::MAIL_DRIVER_SMTP) {
+            \Config::set('mail.auth_mode', '');
             \Config::set('mail.host', Option::get('mail_host'));
             \Config::set('mail.port', Option::get('mail_port'));
             if (!Option::get('mail_username')) {
@@ -1615,7 +1617,6 @@ class Mail
     public static function sanitizeSmtpStatusMessage($status_message)
     {
         $status_message = preg_replace('#(username ")[^"]+(")#', '$1***$2', $status_message ?? '');
-        $status_message = preg_replace("#(Swift_Transport_Esmtp_Auth_LoginAuthenticator\->authenticate\(Object\(Swift_SmtpTransport\), ')[^\']+(', ')[^\']+('\))#", '$1***$2***$3', $status_message ?? '');
 
         return $status_message;
     }

@@ -143,6 +143,9 @@ return [
 
     'smtp_timeout' => env('MAIL_SMTP_TIMEOUT', 25),
 
+    // Host name used in SMTP EHLO command (APP_URL host by default).
+    'local_domain' => env('MAIL_EHLO_DOMAIN'),
+
     /*
     |--------------------------------------------------------------------------
     | Laravel mailers
@@ -165,6 +168,7 @@ return [
             'password'   => env('MAIL_PASSWORD'),
             'auth_mode'  => env('MAIL_AUTH_MODE', ''),
             'timeout'    => env('MAIL_SMTP_TIMEOUT', 25),
+            'local_domain' => env('MAIL_EHLO_DOMAIN'),
         ],
         'sendmail' => [
             'transport' => 'sendmail',

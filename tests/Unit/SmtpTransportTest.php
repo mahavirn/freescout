@@ -41,6 +41,18 @@ class SmtpTransportTest extends TestCase
         $this->assertTrue(\MailHelper::$smtp_data_sent);
     }
 
+    public function testEhloUsesAppHostAndConnectionIsClosed()
+    {
+        config(['app.url' => 'https://support.example.org']);
+        $transport = $this->transport();
+
+        $sent = $transport->send($this->email(['customer@example.org']));
+
+        $this->assertStringContainsString('EHLO support.example.org', $sent->getDebug());
+        $started = \Closure::bind(fn () => $this->started, $transport, \Symfony\Component\Mailer\Transport\Smtp\SmtpTransport::class);
+        $this->assertFalse($started());
+    }
+
     public function testAllRecipientsRejected()
     {
         $transport = $this->transport();
@@ -49,6 +61,20 @@ class SmtpTransportTest extends TestCase
         $this->expectExceptionMessage('No valid recipients');
 
         $transport->send($this->email(['reject1@example.org'], ['reject2@example.org']));
+    }
+
+    public function testErrorMessageDoesNotContainCredentials()
+    {
+        $transport = $this->transport();
+        $add = \Closure::bind(function ($command) {
+            $this->last_command = $command;
+
+            return $this->addLastCommandToException(new TransportException('Expected response code "235" but got code "535".'));
+        }, $transport, SmtpTransport::class);
+
+        $this->assertStringNotContainsString('cGFzc3dvcmQ=', $add("cGFzc3dvcmQ=\r\n")->getMessage());
+        $this->assertStringNotContainsString('secret', $add("AUTH PLAIN secret\r\n")->getMessage());
+        $this->assertStringStartsWith('Last Command: RCPT TO;', $add("RCPT TO:<customer@example.org>\r\n")->getMessage());
     }
 
     public function testSmtpLogHidesCredentials()

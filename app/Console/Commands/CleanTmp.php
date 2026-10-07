@@ -43,11 +43,6 @@ class CleanTmp extends Command
         // Remove 1 week old FreeScout files.
         \Helper::shellExec('find '.\Helper::getTempDir().' -mtime +7 -type f -name '.\Helper::getTempFilePrefix().'* -exec rm -r -f {} \;');
 
-        // Remove temporary 1 day old SwiftMailer files.
-        // Example: /tmp/a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6/body
-        // https://github.com/freescout-help-desk/freescout/issues/5558
-        \Helper::shellExec('find '.\Helper::getTempDir().' -mtime +1 -type d -regextype posix-extended -regex ".*/[a-f0-9]{32}" -exec rm -r -f {} \;');
-
         $this->comment("Done");
     }
 }

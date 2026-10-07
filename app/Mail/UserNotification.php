@@ -35,11 +35,12 @@ class UserNotification extends Mailable
     public $headers = [];
 
     /**
-     * From.
+     * From: ['address' => '...', 'name' => '...'].
+     * Not named $from, as Mailable::$from has a different format.
      *
      * @var array
      */
-    public $from = [];
+    public $mail_from = [];
 
     /**
      * Mailbox.
@@ -59,7 +60,7 @@ class UserNotification extends Mailable
         $this->conversation = $conversation;
         $this->threads = $threads;
         $this->headers = $headers;
-        $this->from = $from;
+        $this->mail_from = $from;
         $this->mailbox = $mailbox;
     }
 
@@ -92,7 +93,7 @@ class UserNotification extends Mailable
         $template_fields = \Eventy::filter('email.user_notification.template_fields', ['customer' => $customer, 'thread' => $thread, 'mailbox' => $this->mailbox]);
 
         return $this->subject($subject)
-            ->from($this->from['address'], $this->from['name'])
+            ->from($this->mail_from['address'], $this->mail_from['name'])
             ->view($template_html, $template_fields)
             ->text($template_text, $template_fields);
     }

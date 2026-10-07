@@ -1,8 +1,10 @@
 <?php
 /**
- * SMTP transport with FreeScout specific behaviour (ported from Swift Mailer overrides):
+ * SMTP transport with FreeScout specific behaviour:
  * - XOAUTH2 authentication.
  * - SSL certificates are not verified (https://github.com/freescout-helpdesk/freescout/issues/2714).
+ * - EHLO uses MAIL_EHLO_DOMAIN or APP_URL host instead of [127.0.0.1] (rejected by some servers, like G Suite).
+ * - Connection is closed after each message, as queue workers run for a long time.
  * - No automatic STARTTLS when encryption is not set.
  * - Remembers if message data has been passed to the server (\MailHelper::$smtp_data_sent).
  * - Adds the last SMTP command to error messages (without sensitive data).
@@ -52,6 +54,12 @@ class SmtpTransport extends EsmtpTransport
             $transport->setPassword($config['password'] ?? '');
         }
 
+        $local_domain = $config['local_domain'] ?? '';
+        if (!$local_domain) {
+            $local_domain = parse_url((string)config('app.url'), PHP_URL_HOST) ?: '127.0.0.1';
+        }
+        $transport->setLocalDomain($local_domain);
+
         $stream = $transport->getStream();
         $stream->setStreamOptions(['ssl' => ['verify_peer' => false, 'verify_peer_name' => false, 'allow_self_signed' => true]]);
         if (!empty($config['timeout'])) {
@@ -59,6 +67,15 @@ class SmtpTransport extends EsmtpTransport
         }
 
         return $transport;
+    }
+
+    public function send(\Symfony\Component\Mime\RawMessage $message, ?\Symfony\Component\Mailer\Envelope $envelope = null): ?SentMessage
+    {
+        try {
+            return parent::send($message, $envelope);
+        } finally {
+            $this->stop();
+        }
     }
 
     protected function doSend(SentMessage $message): void
@@ -117,19 +134,15 @@ class SmtpTransport extends EsmtpTransport
     }
 
     /**
-     * Add last SMTP command to the error message, removing sensitive data (AUTH params).
+     * Add last SMTP command name to the error message.
      */
     protected function addLastCommandToException(TransportExceptionInterface $e)
     {
-        $last_command = trim($this->last_command);
-        if (!$last_command) {
+        // Only SMTP command names: lines sent during AUTH contain credentials.
+        if (!preg_match('/^(EHLO|HELO|STARTTLS|AUTH|MAIL FROM|RCPT TO|DATA|STREAMMESSAGE|RSET|NOOP|QUIT)\b/i', trim($this->last_command), $m)) {
             return $e;
         }
-        if (strstr($last_command, ':')) {
-            list($last_command) = explode(':', $last_command);
-        } else {
-            list($last_command) = explode(' ', $last_command);
-        }
+        $last_command = strtoupper($m[1]);
 
         $class = get_class($e);
         $message = 'Last Command: '.$last_command.'; '.$e->getMessage();
