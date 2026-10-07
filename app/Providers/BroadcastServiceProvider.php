@@ -2,7 +2,6 @@
 
 namespace App\Providers;
 
-use Illuminate\Support\Facades\Broadcast;
 use Illuminate\Support\ServiceProvider;
 
 class BroadcastServiceProvider extends ServiceProvider
@@ -18,9 +17,6 @@ class BroadcastServiceProvider extends ServiceProvider
         $this->app[\Illuminate\Broadcasting\BroadcastManager::class]->extend('polycast', function ($app, array $config) {
             return new \App\Broadcasting\Broadcasters\PolycastBroadcaster();
         });
-
-        // This is not needed as we define routes in PolyastServiceProvider
-        //Broadcast::routes();
 
         require base_path('routes/channels.php');
     }

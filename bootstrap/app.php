@@ -1,45 +1,71 @@
 <?php
 
-/*
-|--------------------------------------------------------------------------
-| Create The Application
-|--------------------------------------------------------------------------
-|
-| The first thing we will do is create a new Laravel application instance
-| which serves as the "glue" for all the components of Laravel, and is
-| the IoC container for the system binding all of the various parts.
-|
-*/
+use App\Misc\Application;
+use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Support\Facades\Route;
 
-$app = new App\Misc\Application(
-    realpath(__DIR__.'/../')
-);
+$app = Application::configure(basePath: dirname(__DIR__))
+    // Listeners are registered explicitly in App\Providers\EventServiceProvider.
+    ->withEvents(discover: false)
+    ->withRouting(using: function () {
+        Route::pattern('id', '[0-9]+');
 
-/*
-|--------------------------------------------------------------------------
-| Bind Important Interfaces
-|--------------------------------------------------------------------------
-|
-| Next, we need to bind some important interfaces into the container so
-| we will be able to resolve them when needed. The kernels serve the
-| incoming requests to this application from both the web and CLI.
-|
-*/
+        $subdirectory = \Helper::getSubdirectory();
 
-$app->singleton(
-    Illuminate\Contracts\Http\Kernel::class,
-    App\Http\Kernel::class
-);
+        foreach (['web', 'open'] as $group) {
+            Route::prefix($subdirectory ?: '')
+                ->middleware($group)
+                ->namespace('App\Http\Controllers')
+                ->group(base_path('routes/'.$group.'.php'));
+        }
+    })
+    ->withMiddleware(function (Middleware $middleware) {
+        $middleware->use([
+            \Illuminate\Foundation\Http\Middleware\PreventRequestsDuringMaintenance::class,
+            \Illuminate\Foundation\Http\Middleware\ValidatePostSize::class,
+            \Illuminate\Foundation\Http\Middleware\TrimStrings::class,
+            \Illuminate\Foundation\Http\Middleware\ConvertEmptyStringsToNull::class,
+            \App\Http\Middleware\TrustHosts::class,
+            \App\Http\Middleware\TrustProxies::class,
+            \App\Http\Middleware\ResponseHeaders::class,
+            \App\Http\Middleware\TerminateHandler::class,
+        ]);
 
-$app->singleton(
-    Illuminate\Contracts\Console\Kernel::class,
-    App\Console\Kernel::class
-);
+        $middleware->group('web', [
+            \App\Http\Middleware\EncryptCookies::class,
+            \Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse::class,
+            \Illuminate\Session\Middleware\StartSession::class,
+            \App\Http\Middleware\TokenAuth::class,
+            \Illuminate\View\Middleware\ShareErrorsFromSession::class,
+            \App\Http\Middleware\VerifyCsrfToken::class,
+            \Illuminate\Routing\Middleware\SubstituteBindings::class,
+            \App\Http\Middleware\HttpsRedirect::class,
+            \App\Http\Middleware\CheckBrowser::class,
+            \App\Http\Middleware\Localize::class,
+            \App\Http\Middleware\LogoutIfDeleted::class,
+            \App\Http\Middleware\FrameGuard::class,
+            \App\Http\Middleware\CustomHandle::class,
+            \App\Http\Middleware\ContentSecurityPolicy::class,
+        ]);
 
-$app->singleton(
-    Illuminate\Contracts\Debug\ExceptionHandler::class,
-    App\Exceptions\Handler::class
-);
+        $middleware->group('open', [
+            \Illuminate\Routing\Middleware\SubstituteBindings::class,
+            \App\Http\Middleware\HttpsRedirect::class,
+            \App\Http\Middleware\FrameGuard::class,
+            \App\Http\Middleware\CustomHandle::class,
+        ]);
+
+        $middleware->alias([
+            'auth'     => \App\Http\Middleware\Authenticate::class,
+            // Used by modules routes.
+            'bindings' => \Illuminate\Routing\Middleware\SubstituteBindings::class,
+            'guest'    => \App\Http\Middleware\RedirectIfAuthenticated::class,
+            'roles'    => \App\Http\Middleware\CheckRole::class,
+        ]);
+    })
+    ->withSchedule(new \App\Console\Scheduler())
+    ->withExceptions()
+    ->create();
 
 $app->bind(
     Illuminate\Foundation\Bootstrap\HandleExceptions::class,
@@ -50,16 +76,5 @@ $app->bind(
     Illuminate\Foundation\Bootstrap\LoadEnvironmentVariables::class,
     App\Bootstrap\LoadEnvironmentVariables::class
 );
-
-/*
-|--------------------------------------------------------------------------
-| Return The Application
-|--------------------------------------------------------------------------
-|
-| This script returns the application instance. The instance is given to
-| the calling script so we can separate the building of the instances
-| from the actual running of the application and sending responses.
-|
-*/
 
 return $app;

@@ -3,7 +3,6 @@
 namespace App\Providers;
 
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
-use Illuminate\Support\Facades\Event;
 
 class EventServiceProvider extends ServiceProvider
 {
@@ -57,14 +56,6 @@ class EventServiceProvider extends ServiceProvider
             'App\Listeners\SendNotificationToUsers',
         ],
 
-        'App\Events\UserCreatedConversationDraft' => [
-
-        ],
-
-        'App\Events\UserCreatedThreadDraft' => [
-
-        ],
-
         'App\Events\UserReplied' => [
              'App\Listeners\SendReplyToCustomer',
              'App\Listeners\SendNotificationToUsers',
@@ -96,15 +87,4 @@ class EventServiceProvider extends ServiceProvider
         ],
     ];
 
-    /**
-     * Register any events for your application.
-     *
-     * @return void
-     */
-    public function boot()
-    {
-        parent::boot();
-
-        //
-    }
 }

@@ -2,24 +2,11 @@
 
 namespace App\Console;
 
-use Carbon\Carbon;
-use Illuminate\Console\Scheduling\Schedule;
-use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
 use App\Misc\Mail;
-use App\Option;
+use Illuminate\Console\Scheduling\Schedule;
 
-class Kernel extends ConsoleKernel
+class Scheduler
 {
-    /**
-     * The Artisan commands provided by your application.
-     *
-     * @var array
-     */
-    protected $commands = [
-        // It is not clear what for this array
-        //\App\Console\Commands\CreateUser::class,
-    ];
-
     /**
      * Define the application's command schedule.
      * If --no-interaction flag is set the script will not run 'queue:work' daemon.
@@ -28,7 +15,7 @@ class Kernel extends ConsoleKernel
      *
      * @return void
      */
-    protected function schedule(Schedule $schedule)
+    public function __invoke(Schedule $schedule)
     {
         // https://github.com/freescout-helpdesk/freescout/issues/3970
         if (!$this->isScheduleRun() && !\Helper::isRoute('system.cron')) {
@@ -276,17 +263,5 @@ class Kernel extends ConsoleKernel
         } else {
             return !empty($_SERVER['argv']) && in_array('schedule:run', $_SERVER['argv']);
         }
-    }
-
-    /**
-     * Register the commands for the application.
-     *
-     * @return void
-     */
-    protected function commands()
-    {
-        $this->load(__DIR__.'/Commands');
-
-        require base_path('routes/console.php');
     }
 }
