@@ -259,7 +259,7 @@
     @action('system.status.after_cron_commands')
 
     <h3 id="jobs" class="margin-top-40">{{ __('Background Jobs') }}</h3>
-    @if (count($queued_jobs) || count($failed_jobs))
+    @if ($queued_jobs_count || count($failed_jobs))
         {{ __('Queued and failed jobs are cleaned automatically once in a while. No need to worry or delete them manually.') }}
     @endif
     <table class="table table-dark-header table-bordered table-responsive">
@@ -268,7 +268,7 @@
                 <th>{{ __('Queued Jobs') }}</th>
                 <td class="table-main-col">
                     <p>
-                        {{ __('Total') }}: <strong>{{ count($queued_jobs)}}</strong>
+                        {{ __('Total') }}: <strong>{{ $queued_jobs_count }}</strong>
                     </p>
                     <div class="jobs-list">
                         @foreach ($queued_jobs as $job)

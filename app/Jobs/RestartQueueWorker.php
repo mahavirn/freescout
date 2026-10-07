@@ -16,15 +16,8 @@ class RestartQueueWorker implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    /**
-     * Create a new job instance.
-     *
-     * @return void
-     */
-    public function __construct()
-    {
-        
-    }
+    // Option storing the time when the job has been queued.
+    const QUEUED_AT_OPTION = 'queue_worker_restart_queued_at';
 
     /**
      * Execute the job.
@@ -34,6 +27,7 @@ class RestartQueueWorker implements ShouldQueue
     public function handle()
     {
         $this->delete();
+        \Option::remove(self::QUEUED_AT_OPTION);
         // register_shutdown_function() is called on exit(),
         // so commands mutexes are removed.
         exit();

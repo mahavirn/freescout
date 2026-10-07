@@ -1545,10 +1545,11 @@ class Helper
         \Cache::forever('illuminate:queue:restart', Carbon::now()->getTimestamp());
         // In some systems queue:work runs on a separate file system,
         // so those queue:work processes may not get illuminate:queue:restart.
-        $job_exists = \App\Job::where('queue', 'default')
-            ->ofJob(\App\Jobs\RestartQueueWorker::class)
-            ->exists();
-        if (!$job_exists) {
+        // Only one restart job is queued at a time. The job removes the flag.
+        // The flag is stored in DB, as it works with any queue driver and file system.
+        $queued_at = (int)\Option::get(\App\Jobs\RestartQueueWorker::QUEUED_AT_OPTION, 0, true, false);
+        if ($queued_at < time() - 3600) {
+            \Option::set(\App\Jobs\RestartQueueWorker::QUEUED_AT_OPTION, time());
             \App\Jobs\RestartQueueWorker::dispatch()->onQueue('default');
         }
     }

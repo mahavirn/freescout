@@ -2,7 +2,6 @@
 
 namespace App\Console\Commands;
 
-use App\Job;
 use Illuminate\Console\Command;
 
 class SendMonitor extends Command
@@ -24,36 +23,15 @@ class SendMonitor extends Command
     protected $description = 'Check if queue:work is processing emails queue and show an alert in the web interface if needed';
 
     /**
-     * Create a new command instance.
-     *
-     * @return void
-     */
-    public function __construct()
-    {
-        parent::__construct();
-    }
-
-    /**
      * Execute the console command.
      *
      * @return mixed
      */
     public function handle()
     {
-        // Get SendReplyToCustomer jobs.
-        $pending_jobs = \App\Job::where('queue', 'emails')
-            ->ofJob(\App\Jobs\SendReplyToCustomer::class)
-            ->where('available_at', '<', time() - self::CHECK_PERIOD)
-            ->exists();
-
-        // Check failed_jobs.
-        // No need - it can be done via Manage > Alerts > Logs Monitoring
-        // if (!$pending_jobs) {
-        //     $pending_jobs = \App\FailedJob::where('queue', 'emails')
-        //         ->ofJob(\App\Jobs\SendReplyToCustomer::class)
-        //         ->where('created_at', '<', time() - self::CHECK_PERIOD)
-        //         ->exists();
-        // }
+        // Works with any queue driver.
+        $oldest_job_time = \Queue::creationTimeOfOldestPendingJob('emails');
+        $pending_jobs = $oldest_job_time && $oldest_job_time < time() - self::CHECK_PERIOD;
 
         if ($pending_jobs) {
             \Option::set('send_emails_problem', '1');

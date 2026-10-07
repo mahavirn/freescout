@@ -84,7 +84,15 @@ class SystemController extends Controller
         $env_is_writable = is_writable(base_path('.env'));
 
         // Jobs
-        $queued_jobs = \App\Job::orderBy('created_at', 'desc')->limit(100)->get();
+        // Other queue drivers (Redis, SQS, etc) do not store jobs in DB,
+        // so only the number of jobs is shown.
+        if (config('queue.default') == 'database') {
+            $queued_jobs = \App\Job::orderBy('created_at', 'desc')->limit(100)->get();
+            $queued_jobs_count = count($queued_jobs);
+        } else {
+            $queued_jobs = collect();
+            $queued_jobs_count = \Queue::size('emails') + \Queue::size('default');
+        }
         $failed_jobs = \App\FailedJob::orderBy('failed_at', 'desc')->limit(100)->get();
         $failed_queues = $failed_jobs->pluck('queue')->unique();
 
@@ -222,6 +230,7 @@ class SystemController extends Controller
         return view('system/status', [
             'commands'              => $commands,
             'queued_jobs'           => $queued_jobs,
+            'queued_jobs_count'     => $queued_jobs_count,
             'failed_jobs'           => $failed_jobs,
             'failed_queues'         => $failed_queues,
             'php_extensions'        => $php_extensions,

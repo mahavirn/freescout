@@ -3,16 +3,13 @@
 namespace Tests\Feature;
 
 use App\FailedJob;
-use App\Job;
-use App\Jobs\RestartQueueWorker;
 use App\Jobs\SendReplyToCustomer;
 use App\Thread;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Tests\TestCase;
 
 /**
- * Queued jobs are looked up by class in jobs / failed_jobs tables
- * (undo reply, send monitor, retry sending, queue worker restart).
+ * Failed jobs are looked up by class in failed_jobs table (retry sending).
  * Uses real payloads created by the database queue driver.
  */
 class QueuedJobLookupTest extends TestCase
@@ -20,14 +17,6 @@ class QueuedJobLookupTest extends TestCase
     use DatabaseTransactions;
 
     const QUEUE = 'test_job_lookup';
-
-    public function testJobIsFoundByClass()
-    {
-        \Queue::connection('database')->pushOn(self::QUEUE, new RestartQueueWorker());
-
-        $this->assertTrue(Job::where('queue', self::QUEUE)->ofJob(RestartQueueWorker::class)->exists());
-        $this->assertFalse(Job::where('queue', self::QUEUE)->ofJob(SendReplyToCustomer::class)->exists());
-    }
 
     public function testFailedReplyJobIsFoundByThread()
     {

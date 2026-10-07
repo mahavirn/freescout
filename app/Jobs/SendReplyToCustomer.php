@@ -28,6 +28,10 @@ class SendReplyToCustomer implements ShouldQueue
     // Needed to show proper signature when conversation is being moved between mailboxes.
     public $mailbox_change_history = [];
 
+    // Timestamp of the last thread when the job was queued.
+    // Undone reply sent again gets a new timestamp and a new job.
+    public $last_thread_created_at;
+
     private $failures = [];
     private $recipients = [];
     private $last_thread = null;
@@ -53,8 +57,22 @@ class SendReplyToCustomer implements ShouldQueue
     {
         $this->conversation = $conversation;
         $this->threads = $threads;
+        $this->last_thread_created_at = Thread::getLastThread($threads)?->created_at?->getTimestamp();
         // Recipient.
         $this->customer = $customer;
+    }
+
+    /**
+     * Reply has been undone and sent again, so it is sent by a newer job.
+     */
+    public function isOutdated()
+    {
+        // Jobs queued before last_thread_created_at was added.
+        if ($this->last_thread_created_at === null) {
+            return false;
+        }
+
+        return Thread::getLastThread($this->threads)?->created_at?->getTimestamp() !== $this->last_thread_created_at;
     }
 
     /**
@@ -131,8 +149,8 @@ class SendReplyToCustomer implements ShouldQueue
         }
         $last_customer_thread = null;
 
-        // If thread is draft, it means it has been undone
-        if ($this->last_thread->isDraft()) {
+        // If thread is draft, it means it has been undone.
+        if ($this->last_thread->isDraft() || $this->isOutdated()) {
             return;
         }
 
